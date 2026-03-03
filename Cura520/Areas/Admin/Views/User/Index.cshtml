@@ -1,0 +1,97 @@
+﻿@model IEnumerable<ApplicationUser>
+
+
+<div class="container">
+    <div class="row mb-3 align-items-center my-3">
+        <div class="col-md-6">
+            <h2 class="display-6">All Categories</h2>
+        </div>
+        <div class="col-md-6 text-md-end text-start mt-2 mt-md-0">
+            <a href="/Admin/Category/Create" class="btn btn-success">Create</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Full Name</th>
+                        <th scope="col">User Name</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Lock UnLock</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <th scope="row">@item.Id</th>
+                            <th scope="row">@item.FirstName  @item.LastName</th>
+                            <th scope="row">@item.UserName</th>
+                            <td scope="row">@item.Email</td>
+                            <td>
+                                @if (item.LockoutEnd != null && item.LockoutEnd > DateTime.UtcNow)
+                                {
+                                    <a href="/Admin/User/LockUnLock/@item.Id" type="button" class="btn btn-success">Unlock</a>
+                                }
+                                else
+                                {
+                                    <a href="/Admin/User/LockUnLock/@item.Id" type="button" class="btn btn-danger">Lock</a>
+                                }
+
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const deleteButtons = document.querySelectorAll(".btn-delete");
+
+        deleteButtons.forEach(button => {
+            button.addEventListener("click", function (e) {
+                e.preventDefault(); // stop normal navigation
+
+                const url = this.getAttribute("href");
+
+                Swal.fire({
+                    title: "Are you sure?",
+                    text: "this Category will be deleted !",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#d33",
+                    cancelButtonColor: "#3085d6",
+                    confirmButtonText: "Yes, delete it!"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                          title: "Deleted!",
+                          text: "Your file has been deleted.",
+                          icon: "success"
+                        });
+
+                        // Redirect to delete URL
+                        window.location.href = url;
+                    }
+                });
+            });
+        });
+    });
+</script>
+
+
+@section Scripts {
+
+    <partial name="_NotificationPartial" />
+}
+
+
+

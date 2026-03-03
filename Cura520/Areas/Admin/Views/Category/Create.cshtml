@@ -1,0 +1,55 @@
+﻿@model Category
+
+<div class="container">
+    <div class="row mb-3 align-items-center my-3">
+        <div class="col-md-6">
+            <h2 class="display-6">Create new Category</h2>
+        </div>
+    </div>
+
+    <div class="row my-3">
+        <div class="col-12">
+            <form method="post">
+                <div class= "text-danger" asp-validation-summary="All"></div>
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name</label>
+                    <input class="form-control" name="Name" value="@Model.Name" asp-for="Name">
+                    <span class="text-danger" asp-validation-for="@Model.Name"></span>
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <div class="form-floating">
+                        <textarea class="form-control" placeholder="Leave a description here" style="height: 100px" name="Description" asp-for="Description">@Model.Description</textarea>
+                        <label for="description">You Description Here...</label>
+                        <span class="text-danger" asp-validation-for="@Model.Description"></span>
+
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="Status" class="form-select">
+                        @if(Model.Status)
+                        {
+                            <option value="true" selected>Active</option>
+                            <option value="false">InActive</option> 
+                        }
+                        else
+                        {
+                            <option value="false" selected>InActive</option>
+                            <option value="true" >Active</option>
+                        }
+                        <span class="text-danger" asp-validation-for="@Model.Status"></span>
+
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+
+    <partial name="_ValidationScriptsPartial" />
+}
+
