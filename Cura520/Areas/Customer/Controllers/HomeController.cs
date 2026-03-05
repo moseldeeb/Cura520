@@ -1,12 +1,12 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using Ecommerce.DataAccess;
-using Ecommerce.ViewModel;
+using Cura520.DataAccess;
+using Cura520.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace Ecommerce.Areas.Customer.Controllers
+namespace Cura520.Areas.Customer.Controllers
 {
     [Area("Customer")]
     [Authorize]
