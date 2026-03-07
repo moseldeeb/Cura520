@@ -1,0 +1,10 @@
+﻿global using Cura520.DataAccess;
+global using Cura520.Models;
+global using Cura520.Repos;
+global using Cura520.ViewModel;
+global using Cura520.Utilities;
+global using Microsoft.AspNetCore.Identity;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.EntityFrameworkCore;
+global using System.ComponentModel.DataAnnotations;
+global using System.ComponentModel.DataAnnotations.Schema;

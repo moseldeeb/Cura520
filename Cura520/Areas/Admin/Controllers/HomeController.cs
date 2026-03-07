@@ -1,21 +1,16 @@
-﻿using Ecommerce.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Ecommerce.Areas.Admin.Controllers
+namespace Cura520.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles =$"{SD.SUPER_ADMIN_ROLE} ,{SD.ADMIN_ROLE} ,{SD.EMPLOYEE_ROLE} ")]
+    [Authorize(Roles = $"{SD.Role_SuperAdmin},{SD.Role_Admin},{SD.Role_Manager}")]
     public class HomeController : Controller
     {
-        public ViewResult Index()
-        {
-            return View();
-        }
-        public ViewResult NotFoundPage()
+        // GET: HomeController
+        public ActionResult Index()
         {
             return View();
         }
     }
 }
-//means: “Open a writable stream to a new file at that path.”

@@ -1,29 +1,32 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Cura520.Areas.receptionist.Controllers
+namespace Cura520.Areas.Admin.Controllers
 {
-    public class HomeController : Controller
+    [Area("Admin")]
+    [Authorize(Roles = $"{SD.Role_SuperAdmin},{SD.Role_Admin},{SD.Role_Manager}")]
+    public class DashboardController : Controller
     {
-        // GET: HomeController
+        // GET: DashboardController
         public ActionResult Index()
         {
             return View();
         }
 
-        // GET: HomeController/Details/5
+        // GET: DashboardController/Details/5
         public ActionResult Details(int id)
         {
             return View();
         }
 
-        // GET: HomeController/Create
+        // GET: DashboardController/Create
         public ActionResult Create()
         {
             return View();
         }
 
-        // POST: HomeController/Create
+        // POST: DashboardController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create(IFormCollection collection)
@@ -38,13 +41,13 @@ namespace Cura520.Areas.receptionist.Controllers
             }
         }
 
-        // GET: HomeController/Edit/5
+        // GET: DashboardController/Edit/5
         public ActionResult Edit(int id)
         {
             return View();
         }
 
-        // POST: HomeController/Edit/5
+        // POST: DashboardController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(int id, IFormCollection collection)
@@ -59,13 +62,13 @@ namespace Cura520.Areas.receptionist.Controllers
             }
         }
 
-        // GET: HomeController/Delete/5
+        // GET: DashboardController/Delete/5
         public ActionResult Delete(int id)
         {
             return View();
         }
 
-        // POST: HomeController/Delete/5
+        // POST: DashboardController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Delete(int id, IFormCollection collection)

@@ -1,4 +1,4 @@
-﻿namespace Ecommerce.ViewModel
+﻿namespace Cura520.ViewModel
 {
     public class FilerPersonVM
     {
