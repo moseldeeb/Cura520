@@ -1,93 +1,219 @@
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Cura520.DataAccess;
 using Cura520.Models;
-using Cura520.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Cura520.Models;
+
 
 namespace Cura520.Areas.Patient.Controllers
 {
     [Area("Patient")]
     [Authorize]
-    public class HomeController : Controller
+    public class PatientsController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-        private ApplicationDbContext _context;//= new ApplicationDbContext();
-        public HomeController(ApplicationDbContext context, ILogger<HomeController> logger)
+        private readonly ApplicationDbContext _context;
+        private readonly ILogger<PatientsController> _logger;
+
+        public object ApplicationUserId { get; private set; }
+
+        public PatientsController(ApplicationDbContext context, ILogger<PatientsController> logger)
         {
             _context = context;
             _logger = logger;
         }
 
-        //public IActionResult Index(FilterProductVM filterVM, int page = 1)
-        //{
-        //    var products = _context.Products.Include(p => p.Category).AsQueryable();
-        //    // add filter 
-        //    if (filterVM.Name is not null)
-        //    {
-        //        products = products.Where(p => p.Name.Contains(filterVM.Name));
-        //        ViewBag.Name = filterVM.Name;
-        //    }
-        //    if (filterVM.MinPrice is not null)
-        //    {
-        //        products = products.Where(p => p.Price - p.Price * (p.Discount / 100) >= filterVM.MinPrice);
-        //        ViewBag.MinPrice = filterVM.MinPrice;
-        //    }
-        //    if (filterVM.MaxPrice is not null)
-        //    {
-        //        products = products.Where(p => p.Price - p.Price * (p.Discount / 100) <= filterVM.MaxPrice);
-        //        ViewBag.MaxPrice = filterVM.MaxPrice;
-        //    }
-        //    if (filterVM.CategoryId is not null)
-        //    {
-        //        products = products.Where(p => p.CategoryId == filterVM.CategoryId);
-        //        ViewBag.CategoryId = filterVM.CategoryId;
-        //    }
-        //    if (filterVM.BrandId is not null)
-        //    {
-        //        products = products.Where(p => p.BrandId == filterVM.BrandId);
-        //        ViewBag.BrandId = filterVM.BrandId;
-
-        //    }
-        //    if (filterVM.IsHot)
-        //    {
-        //        products = products.Where(p => p.Discount >= 50);
-        //        ViewBag.IsHot = filterVM.IsHot;
-        //    }
-        //    var categories = _context.Categories.AsQueryable();
-        //    //ViewData["Categories"] = categories.AsEnumerable();
-        //    ViewBag.Categories = categories.AsEnumerable();
-
-        //    var brands = _context.Brands.AsQueryable();
-        //    ViewBag.Brands = brands.AsEnumerable();
-
-
-        //    ViewBag.TotalPages = Math.Ceiling(products.Count() / 8.0);
-        //    ViewBag.CurrentPage = page;
-
-        //    products = products.Skip((page - 1) * 8).Take(8);
-
-        //    return View(products.AsEnumerable());
-        //}
-
-        public IActionResult Privacy()
+        // GET: Patient/Patients
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var patients = await _context.Patients
+                .Include(p => p.ApplicationUser)
+                .Include(p => p.MedicalHistory)
+                .Where(p => !p.IsDeleted)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return View(patients);
         }
-        public ViewResult Welcome()
+
+        // GET: Patient/Patients/Details/5
+        public async Task<IActionResult> Details(int? id)
         {
-            return View();
+            if (id is null) return BadRequest();
+
+            var patient = await _context.Patients
+                .Include(p => p.ApplicationUser)
+                .Include(p => p.MedicalHistory)
+                    .ThenInclude(m => m.Prescriptions)
+                .Include(p => p.Appointments)
+                    .ThenInclude(a => a.Doctor)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
+
+            if (patient == null) return NotFound();
+
+            return View(patient);
+        }
+
+       
+        public async Task<IActionResult> Create([Bind("ApplicationUserId,DateOfBirth,Gender,PhoneNumber,BloodType,Allergies")] Models.Patient patient)
+        {
+            if (!ModelState.IsValid)
+            {
+                ViewBag.ApplicationUsers = new SelectList(_context.Users.AsNoTracking().ToList(), "Id", "UserName", patient.ApplicationUserId);
+                return View(patient);
+            }
+
+            patient.CreatedAtIfMissing();
+            _context.Add(patient);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
         
 
+
+        // Remove the duplicate Create method (the one without [HttpPost] and [ValidateAntiForgeryToken] attributes)
+        // The following method should remain as the only Create action for POST:
 
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> Create([Bind("ApplicationUserId,DateOfBirth,Gender,PhoneNumber,BloodType,Allergies")] Cura520.Models.Patient patient)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        ViewBag.ApplicationUsers = new SelectList(_context.Users.AsNoTracking().ToList(), "Id", "UserName", patient.ApplicationUserId);
+        //        return View(patient);
+        //    }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        //    patient.CreatedAtIfMissing();
+        //    _context.Add(patient);
+        //    await _context.SaveChangesAsync();
+        //    return RedirectToAction(nameof(Index));
+        //}
+
+        // GET: Patient/Patients/Edit/5
+        public async Task<IActionResult> Edit(int? id)
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            if (id is null) return BadRequest();
+
+            var patient = await _context.Patients.FindAsync(id);
+            if (patient == null || patient.IsDeleted) return NotFound();
+
+            ViewBag.ApplicationUsers = new SelectList(_context.Users.AsNoTracking().ToList(), "Id", "UserName", patient.ApplicationUserId);
+            return View(patient);
+        }
+
+        // Replace this line:
+        // public async Task<IActionResult> Edit(int id, [Bind("Id,ApplicationUserId,DateOfBirth,Gender,PhoneNumber,BloodType,Allergies,IsDeleted")] Patient patient)
+
+        // With this line, using the fully qualified type name:
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("Id,ApplicationUserId,DateOfBirth,Gender,PhoneNumber,BloodType,Allergies,IsDeleted")] Cura520.Models.Patient patient)
+        {
+
+            if (id != patient.Id) return BadRequest();
+
+
+
+            if (!ModelState.IsValid)
+
+            {
+
+                ViewBag.ApplicationUsers = new SelectList(_context.Users.AsNoTracking().ToList(), "Id", "UserName", patient.ApplicationUserId);
+
+                return View(patient);
+
+            }
+
+
+
+            try
+
+            {
+
+                _context.Update(patient);
+
+                await _context.SaveChangesAsync();
+
+            }
+
+            catch (DbUpdateConcurrencyException)
+
+            {
+
+                if (!PatientExists(patient.Id)) return NotFound();
+
+                throw;
+
+            }
+
+
+
+            return RedirectToAction(nameof(Index));
+
+        }
+
+        // GET: Patient/Patients/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id is null) return BadRequest();
+
+            var patient = await _context.Patients
+                .Include(p => p.ApplicationUser)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
+
+            if (patient == null) return NotFound();
+
+            return View(patient);
+        }
+
+        // POST: Patient/Patients/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var patient = await _context.Patients.FindAsync(id);
+            if (patient == null) return NotFound();
+
+            // Soft delete
+            patient.IsDeleted = true;
+            _context.Update(patient);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        private bool PatientExists(int id) =>
+            _context.Patients.Any(e => e.Id == id && !e.IsDeleted);
+    }
+
+    // If there is a namespace called 'Patient' and a class called 'Patient', 
+    // you must use the fully qualified name for the class in the extension method:
+
+    internal static class PatientExtensions
+    {
+        public static void CreatedAtIfMissing(this Cura520.Models.Patient patient)
+        {
+            try
+            {
+                var prop = patient.GetType().GetProperty("CreatedAt");
+                if (prop != null && prop.PropertyType == typeof(DateTime))
+                {
+                    var value = (DateTime)prop.GetValue(patient);
+                    if (value == default) prop.SetValue(patient, DateTime.UtcNow);
+                }
+            }
+            catch
+            {
+                // ignore reflection errors; non-critical
+            }
         }
     }
 }
