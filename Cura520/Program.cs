@@ -1,9 +1,6 @@
 using Cura520.DataAccess;
 using Cura520.Models;
 using Cura520.Utilities;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.EntityFrameworkCore;
 
 namespace Cura520
 {
@@ -15,21 +12,10 @@ namespace Cura520
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-            // Register Identity Services
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => {
-                options.Password.RequireDigit = false;
-                options.Password.RequiredLength = 6;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireUppercase = false;
-                options.Password.RequireLowercase = false;
-            })
-            .AddEntityFrameworkStores<ApplicationDbContext>();
-
-            builder.Services.AddScoped<IDBInitializr, DBInitializr>();
-            builder.Services.AddScoped<IEmailSender, EmailSender>();
+            
+            // Use centralized configuration
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            builder.Services.Config(connectionString);
 
             var app = builder.Build();
 
@@ -56,6 +42,17 @@ namespace Cura520
             app.UseHttpsRedirection();
             app.UseRouting();
 
+            // Redirect root URL to login
+            app.Use(async (context, next) =>
+            {
+                if (context.Request.Path == "/" && !context.User.Identity.IsAuthenticated)
+                {
+                    context.Response.Redirect("/Identity/Account/Login");
+                    return;
+                }
+                await next();
+            });
+
             app.UseAuthentication();
             app.UseAuthorization();
 
@@ -65,7 +62,7 @@ namespace Cura520
                 name: "areas",
                 pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
-            // 2. Map for the Main App (Default landing page outside areas)
+            // 2. Map for the Main App (Default landing page)
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
