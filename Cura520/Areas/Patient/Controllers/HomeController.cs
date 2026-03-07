@@ -80,21 +80,21 @@ namespace Cura520.Areas.Patient.Controllers
         // Remove the duplicate Create method (the one without [HttpPost] and [ValidateAntiForgeryToken] attributes)
         // The following method should remain as the only Create action for POST:
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ApplicationUserId,DateOfBirth,Gender,PhoneNumber,BloodType,Allergies")] Cura520.Models.Patient patient)
-        {
-            if (!ModelState.IsValid)
-            {
-                ViewBag.ApplicationUsers = new SelectList(_context.Users.AsNoTracking().ToList(), "Id", "UserName", patient.ApplicationUserId);
-                return View(patient);
-            }
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> Create([Bind("ApplicationUserId,DateOfBirth,Gender,PhoneNumber,BloodType,Allergies")] Cura520.Models.Patient patient)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        ViewBag.ApplicationUsers = new SelectList(_context.Users.AsNoTracking().ToList(), "Id", "UserName", patient.ApplicationUserId);
+        //        return View(patient);
+        //    }
 
-            patient.CreatedAtIfMissing();
-            _context.Add(patient);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
+        //    patient.CreatedAtIfMissing();
+        //    _context.Add(patient);
+        //    await _context.SaveChangesAsync();
+        //    return RedirectToAction(nameof(Index));
+        //}
 
         // GET: Patient/Patients/Edit/5
         public async Task<IActionResult> Edit(int? id)
