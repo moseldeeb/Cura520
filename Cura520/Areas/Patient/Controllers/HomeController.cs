@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace Cura520.Areas.Customer.Controllers
+namespace Cura520.Areas.Patient.Controllers
 {
     [Area("Patient")]
     [Authorize]
