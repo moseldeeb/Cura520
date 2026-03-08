@@ -10,7 +10,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Cura520.Areas.Patient.Controllers
 {
     [Area("Patient")]
-    [Authorize]
+    // ? AUTHORIZATION DISABLED FOR TESTING - Uncomment when ready
+    // [Authorize]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;

@@ -42,6 +42,9 @@ namespace Cura520
             app.UseHttpsRedirection();
             app.UseRouting();
 
+            // ? AUTHENTICATION & AUTHORIZATION DISABLED FOR TESTING
+            // Uncomment the middleware below when you want to enable authentication
+            /*
             // Redirect root URL to login
             app.Use(async (context, next) =>
             {
@@ -55,6 +58,7 @@ namespace Cura520
 
             app.UseAuthentication();
             app.UseAuthorization();
+            */
 
             app.MapStaticAssets();
             // 1. Map for Areas (This handles Admin, Doctor, Customer, etc.)

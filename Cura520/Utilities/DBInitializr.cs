@@ -45,13 +45,15 @@ namespace Cura520.Utilities
                 // 3. Create the "God Account" (Super Admin)
                 _userManager.CreateAsync(new ApplicationUser
                 {
-                    UserName = "admin@cura.com",
+                    UserName = "CuraAdmin",
                     Email = "admin@cura.com",
                     FirstName = "Cura",
                     LastName = "Admin",
-                    PhoneNumber = "0123456789",
+                    PhoneNumber = "01090670584",
                     Address = "Egypt, Cairo",
+                    EmailConfirmed = true,
                     Type = UserType.Admin // Your enum
+
                 }, "Admin123*").GetAwaiter().GetResult();
 
                 ApplicationUser user = _db.Users.FirstOrDefault(u => u.Email == "admin@cura.com");

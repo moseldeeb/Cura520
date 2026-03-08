@@ -1,37 +1,79 @@
 ﻿@model Cura520.ViewModel.ResendEmailConfirmationVM
 
 @{
-    ViewData["Title"] = "ResendEmailConfirmation";
+    ViewData["Title"] = "Resend Email Confirmation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<div class="container">
-    <h1>ResendEmailConfirmation</h1>
 
-    <h4>ResendEmailConfirmationVM</h4>
-    <hr />
-    <div class="row">
-        <div class="col-md-12">
-            <form asp-action="ResendEmailConfirmation">
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                <div class="form-group">
-                    <label asp-for="UserNameOrEmail" class="control-label"></label>
-                    <input asp-for="UserNameOrEmail" class="form-control" />
-                    <span asp-validation-for="UserNameOrEmail" class="text-danger"></span>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-envelope me-2"></i>Resend Email Confirmation
+                    </h3>
                 </div>
-                <div class="form-group mt-3">
-                    <input type="submit" value="Send" class="btn btn-primary" />
+                <div class="card-body p-4">
+                    <p class="text-muted mb-4">
+                        If you didn't receive a confirmation email, enter your username or email address and we'll send it again.
+                    </p>
+
+                    <form asp-action="ResendEmailConfirmation" method="post">
+                        <div asp-validation-summary="All" class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            <h6 class="alert-heading">Please fix the following errors:</h6>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="UserNameOrEmail" class="form-label fw-bold">
+                                <i class="fas fa-user me-2"></i>Username or Email
+                            </label>
+                            <input asp-for="UserNameOrEmail" class="form-control form-control-lg" 
+                                   placeholder="Enter your username or email address" 
+                                   autocomplete="email" />
+                            <span asp-validation-for="UserNameOrEmail" class="invalid-feedback d-block"></span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-info btn-lg fw-bold text-white">
+                                <i class="fas fa-paper-plane me-2"></i>Send Confirmation Email
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr class="my-4" />
+
+                    <div class="text-center">
+                        <p class="mb-2">Already confirmed your email?</p>
+                        <a asp-action="Login" class="btn btn-link">
+                            <i class="fas fa-sign-in-alt me-1"></i>Go to Login
+                        </a>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <p class="mb-2">Don't have an account yet?</p>
+                        <a asp-action="Register" class="btn btn-link">
+                            <i class="fas fa-user-plus me-1"></i>Create Account
+                        </a>
+                    </div>
                 </div>
-            </form>
+            </div>
+
+            <div class="alert alert-success mt-3">
+                <h6 class="alert-heading">
+                    <i class="fas fa-check-circle me-2"></i>Tips
+                </h6>
+                <ul class="mb-0 small">
+                    <li>Check your spam or junk folder if you don't see the email</li>
+                    <li>You can use either your username or email address</li>
+                    <li>Confirmation links expire after 24 hours</li>
+                    <li>Once confirmed, you'll be able to login to your account</li>
+                </ul>
+            </div>
         </div>
     </div>
-
-    <div>
-        <a asp-action="Index">Back to List</a>
-    </div>
-    <div>
-        <a asp-action="Login">Login</a>
-    </div>
 </div>
-
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

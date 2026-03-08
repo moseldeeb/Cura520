@@ -46,14 +46,19 @@ namespace Cura520.Areas.Identity.Controllers
             {
                 return View(registerVM);
             }
+            
+            // Create new ApplicationUser with all required fields
             ApplicationUser user = new ApplicationUser()
             {
                 UserName = registerVM.UserName,
                 Email = registerVM.Email,
                 FirstName = registerVM.FirstName,
                 LastName = registerVM.LastName,
+                Type = UserType.Patient, // Default to Patient on registration
+                EmailConfirmed = false, // Email not confirmed yet
             };  
-            var result = await _userManager.CreateAsync(user , registerVM.Password); 
+            
+            var result = await _userManager.CreateAsync(user, registerVM.Password); 
             if (!result.Succeeded)
             {
                 foreach(var error in result.Errors)
@@ -62,29 +67,52 @@ namespace Cura520.Areas.Identity.Controllers
                 }
                 return View(registerVM);
             }
-            var token  = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var link = Url.Action(nameof(ConfirmEmail) , "Account" ,new {Area = "Identity" ,token, userId = user.Id} , Request.Scheme);
-            await _emailSender.SendEmailAsync(registerVM.Email, "Ecommerce 520 Confirm Email",
-                $"<h1> confirm your email by clicking <a href='{link}'> here</a>  </h1>"); 
+            
+            // Generate email confirmation token
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var link = Url.Action(nameof(ConfirmEmail), "Account", 
+                new { Area = "Identity", token, userId = user.Id }, Request.Scheme);
+            
+            // Send confirmation email
+            await _emailSender.SendEmailAsync(registerVM.Email, "Cura 520 - Confirm Email",
+                $"<h1>Welcome to Cura 520!</h1>" +
+                $"<p>Please confirm your email by clicking <a href='{link}'>here</a></p>"); 
+            
+            TempData["Success"] = "Registration successful! Please check your email to confirm your account.";
             return RedirectToAction("Login");
         }
-        public async Task<IActionResult> ConfirmEmail(string token , string userId)
+        
+        public async Task<IActionResult> ConfirmEmail(string token, string userId)
         {
-            var  user  = await _userManager.FindByIdAsync(userId);
-            if (user is null )
+            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(userId))
             {
-                TempData["Error"] = "Invalid User";
+                TempData["Error"] = "Invalid confirmation link";
+                return RedirectToAction("Login");
             }
-            var result  = await _userManager.ConfirmEmailAsync(user , token);
+            
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null)
+            {
+                TempData["Error"] = "Invalid user";
+                return RedirectToAction("Login");
+            }
+            
+            if (user.EmailConfirmed)
+            {
+                TempData["Info"] = "Email already confirmed";
+                return RedirectToAction("Login");
+            }
+            
+            var result = await _userManager.ConfirmEmailAsync(user, token);
             if (!result.Succeeded)
             {
-                TempData["Error"] = "Email Confirmation Failed";
+                TempData["Error"] = "Email confirmation failed. " + 
+                    string.Join(", ", result.Errors.Select(e => e.Description));
+                return RedirectToAction("ResendEmailConfirmation");
             }
-            else
-            {
-                TempData["Success"] = "Email Confirmed Successfully";
-            }
-             return RedirectToAction("Login");
+            
+            TempData["Success"] = "Email confirmed successfully! You can now login.";
+            return RedirectToAction("Login");
         }
         public IActionResult Login()
         {
@@ -129,26 +157,45 @@ namespace Cura520.Areas.Identity.Controllers
         {
             return View();
         }
+        
         [HttpPost]
-        public async Task<IActionResult> ResendEmailConfirmation( ResendEmailConfirmationVM resendEmailConfirmationVM)
+        public async Task<IActionResult> ResendEmailConfirmation(ResendEmailConfirmationVM resendEmailConfirmationVM)
         {
-            var user  =  await _userManager.FindByNameAsync(resendEmailConfirmationVM.UserNameOrEmail) ?? await _userManager.FindByEmailAsync(resendEmailConfirmationVM.UserNameOrEmail);
+            if (!ModelState.IsValid)
+            {
+                return View(resendEmailConfirmationVM);
+            }
+            
+            var user = await _userManager.FindByNameAsync(resendEmailConfirmationVM.UserNameOrEmail) 
+                ?? await _userManager.FindByEmailAsync(resendEmailConfirmationVM.UserNameOrEmail);
+            
             if (user is null)
             {
-                ModelState.AddModelError(string.Empty, "Invalid UserName Or Email");
+                ModelState.AddModelError(string.Empty, 
+                    "No account found with that username or email address.");
                 return View(resendEmailConfirmationVM);
             }
+            
             if (user.EmailConfirmed)
             {
-                ModelState.AddModelError(string.Empty, "Email is already confirmed");
+                ModelState.AddModelError(string.Empty, 
+                    "Your email is already confirmed. You can login now.");
                 return View(resendEmailConfirmationVM);
             }
+            
+            // Generate new email confirmation token
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var link = Url.Action(nameof(ConfirmEmail), "Account", new { Area = "Identity", token, userId = user.Id }, Request.Scheme);
-            await _emailSender.SendEmailAsync(user.Email, "Ecommerce 520 Confirm Email",
-                $"<h1> confirm your email by clicking <a href='{link}'> here</a>  </h1>");
+            var link = Url.Action(nameof(ConfirmEmail), "Account", 
+                new { Area = "Identity", token, userId = user.Id }, Request.Scheme);
+            
+            // Send confirmation email
+            await _emailSender.SendEmailAsync(user.Email, "Cura 520 - Confirm Email",
+                $"<h1>Email Confirmation Required</h1>" +
+                $"<p>Please confirm your email by clicking <a href='{link}'>here</a></p>" +
+                $"<p>If you didn't request this, please ignore this email.</p>");
+            
+            TempData["Success"] = "Confirmation email has been sent. Please check your inbox.";
             return RedirectToAction("Login");
-
         }
         public IActionResult ForgetPassword()
         {
@@ -157,37 +204,69 @@ namespace Cura520.Areas.Identity.Controllers
         [HttpPost]
         public async Task<IActionResult> ForgetPassword(ForgetPasswordVM forgetPassword)
         {
-            var user = await _userManager.FindByNameAsync(forgetPassword.UserNameOrEmail) ?? await _userManager.FindByEmailAsync(forgetPassword.UserNameOrEmail);
+            if (!ModelState.IsValid)
+            {
+                return View(forgetPassword);
+            }
+            
+            var user = await _userManager.FindByNameAsync(forgetPassword.UserNameOrEmail) 
+                ?? await _userManager.FindByEmailAsync(forgetPassword.UserNameOrEmail);
+            
             if (user is null)
             {
-                ModelState.AddModelError(string.Empty, "Invalid UserName Or Email");
-                return View(forgetPassword);
+                // Don't reveal if the account exists for security reasons
+                TempData["Info"] = "If an account exists with that username or email, an OTP will be sent.";
+                return RedirectToAction("Login");
             }
+            
             if (!user.EmailConfirmed)
             {
-                ModelState.AddModelError(string.Empty, "Confirm your Email first");
+                ModelState.AddModelError(string.Empty, 
+                    "Please confirm your email first before resetting password. " +
+                    "Use 'Resend Email Confirmation' option.");
                 return View(forgetPassword);
             }
-            var otps = await _applicationUserOTPRepository.GetAsync(opt=>opt.ApplicationUserId == user.Id);
-            var last12hoursOTP = otps.Count(otp=> otp.CreatedAt > DateTime.UtcNow.AddHours(-24) ); 
-            if (last12hoursOTP >= 10)
+            
+            // Check OTP request limits (max 10 requests in 24 hours)
+            var otps = await _applicationUserOTPRepository.GetAsync(
+                opt => opt.ApplicationUserId == user.Id);
+            
+            var last24hoursOTP = otps.Count(
+                otp => otp.CreatedAt > DateTime.UtcNow.AddHours(-24));
+            
+            if (last24hoursOTP >= 10)
             {
-                ModelState.AddModelError(string.Empty, "You have exceeded the maximum number of OTP requests. Please try again later.");
+                ModelState.AddModelError(string.Empty, 
+                    "You have exceeded the maximum number of OTP requests (10 per 24 hours). " +
+                    "Please try again later.");
                 return View(forgetPassword);
             }
-            foreach(var otp in otps)
+            
+            // Invalidate all previous valid OTPs
+            var validOtps = otps.Where(o => o.IsValid).ToList();
+            foreach(var otp in validOtps)
             {
-                 otp.IsValid = false;
-                 _applicationUserOTPRepository.Update(otp);
-                 await _applicationUserOTPRepository.CommitAsync();
+                otp.IsValid = false;
+                _applicationUserOTPRepository.Update(otp);
+                await _applicationUserOTPRepository.CommitAsync();
             }
-            var OTP =  new Random().Next(1000 , 9999).ToString();
-            ApplicationUserOTP applicationUserOTP = new ApplicationUserOTP(OTP, user.Id); 
-             await _applicationUserOTPRepository.AddAsync(applicationUserOTP);
+            
+            // Generate new OTP (6-digit for security)
+            var OTP = new Random().Next(100000, 999999).ToString();
+            ApplicationUserOTP applicationUserOTP = new ApplicationUserOTP(OTP, user.Id);
+            
+            await _applicationUserOTPRepository.AddAsync(applicationUserOTP);
             await _applicationUserOTPRepository.CommitAsync();
-            await _emailSender.SendEmailAsync(user.Email, "Ecommerce 520 Reset Password",
-                $"<h1> use this OTP <span style ='color:red;'>'{OTP}'</span> to Rest your Password  </h1>");
-            return RedirectToAction("ValidateOTP" , new{ applicationUserId = user.Id });
+            
+            // Send OTP email
+            await _emailSender.SendEmailAsync(user.Email, "Cura 520 - Password Reset OTP",
+                $"<h1>Password Reset Request</h1>" +
+                $"<p>Your OTP for password reset is: <strong style='font-size: 24px; color: #d4351b;'>{OTP}</strong></p>" +
+                $"<p>This OTP is valid for 10 minutes only.</p>" +
+                $"<p>If you didn't request this, please ignore this email and your password will remain unchanged.</p>");
+            
+            TempData["Success"] = "OTP has been sent to your email. Please check your inbox.";
+            return RedirectToAction("ValidateOTP", new { applicationUserId = user.Id });
         }
         public IActionResult ValidateOTP( string applicationUserId )
         {
