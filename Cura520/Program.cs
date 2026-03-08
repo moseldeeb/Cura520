@@ -61,7 +61,7 @@ namespace Cura520
             */
 
             app.MapStaticAssets();
-            // 1. Map for Areas (This handles Admin, Doctor, Customer, etc.)
+            // 1. Map for Areas (This handles Admin, Doctor, Patient, etc.)
             app.MapControllerRoute(
                 name: "areas",
                 pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
@@ -69,7 +69,7 @@ namespace Cura520
             // 2. Map for the Main App (Default landing page)
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
+                pattern: "{area=Admin}/{controller=Home}/{action=Index}/{id?}");
 
             app.Run();
         }
