@@ -3,6 +3,7 @@
     public class MedicalHistory
     {
         public int Id { get; set; }
+        [Required]
         public string Diagnosis { get; set; }
         public string Note { get; set; }
         public DateTime RecordDate { get; set; }
@@ -12,6 +13,7 @@
         public int? AppointmentId { get; set; }
         public Appointment Appointment { get; set; }
         public List<Prescription> Prescriptions { get; set; }
+        public bool IsDeleted { get; set; } = false;
 
     }
 }

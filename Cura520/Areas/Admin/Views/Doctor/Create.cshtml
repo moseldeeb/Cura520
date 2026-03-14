@@ -1,0 +1,168 @@
+﻿@using Cura520.Models
+@model Cura520.ViewModel.DoctorVM
+
+@{
+    ViewData["Title"] = "Add New Doctor";
+    Layout = "_AdminLayout";
+}
+
+
+<div class="container-fluid">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Doctor Management</h1>
+        <a asp-action="Home" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to List
+        </a>
+    </div>
+
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Account Credentials</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label asp-for="Email"></label>
+                            <input asp-for="Email" class="form-control" placeholder="Email Address..." />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Password"></label>
+                                    <input asp-for="Password" type="password" class="form-control" />
+                                    <span asp-validation-for="Password" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="ConfirmPassword"></label>
+                                    <input asp-for="ConfirmPassword" type="password" class="form-control" />
+                                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Doctor Profile</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>First Name</label>
+                                    <input asp-for="Doctor.FirstName" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Last Name</label>
+                                    <input asp-for="Doctor.LastName" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Specialty</label>
+                            <input asp-for="Doctor.Specialty" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input asp-for="Doctor.PhoneNumber" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label>Consultation Fee</label>
+                            <input asp-for="Doctor.ConsultationFee" class="form-control" type="number" step="0.01" />
+                        </div>
+                        <div class="form-group">
+                            <label>Profile Image</label>
+                            <input type="file" name="img" class="form-control-file" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Weekly Work Schedules</h6>
+                <button type="button" id="addSchedule" class="btn btn-success btn-sm">
+                    <i class="fas fa-plus"></i> Add Shift
+                </button>
+            </div>
+            <div class="card-body" id="schedule-container">
+                @for (int i = 0; i < Model.DoctorSchedules.Count; i++)
+                {
+                    <div class="row mb-3 align-items-end schedule-row">
+                        <div class="col-md-4">
+                            <label>Day of Week</label>
+                            <select asp-for="DoctorSchedules[i].Day" asp-items="Html.GetEnumSelectList<DayOfWeek>()" class="form-control"></select>
+                        </div>
+                        <div class="col-md-3">
+                            <label>Start Time</label>
+                            <input asp-for="DoctorSchedules[i].StartTime" type="time" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label>End Time</label>
+                            <input asp-for="DoctorSchedules[i].EndTime" type="time" class="form-control" />
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-danger btn-block remove-schedule">Remove</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="mb-5">
+            <button type="submit" class="btn btn-primary btn-icon-split">
+                <span class="icon text-white-50">
+                    <i class="fas fa-check"></i>
+                </span>
+                <span class="text">Save Doctor Profile</span>
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        let index = @Model.DoctorSchedules.Count;
+
+        $("#addSchedule").click(function () {
+            let row = `
+                <div class="row mb-3 align-items-end schedule-row">
+                    <div class="col-md-4">
+                        <select name="DoctorSchedules[\${index}].Day" class="form-control">
+                            ${$("select[name='DoctorSchedules[0].Day']").html()}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input name="DoctorSchedules[\${index}].StartTime" type="time" class="form-control" />
+                    </div>
+                    <div class="col-md-3">
+                        <input name="DoctorSchedules[\${index}].EndTime" type="time" class="form-control" />
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-danger btn-block remove-schedule">Remove</button>
+                    </div>
+                </div>`;
+            $("#schedule-container").append(row);
+            index++;
+        });
+
+        $(document).on("click", ".remove-schedule", function () {
+            $(this).closest(".schedule-row").remove();
+        });
+    </script>
+}

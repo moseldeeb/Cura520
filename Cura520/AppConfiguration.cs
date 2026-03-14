@@ -18,11 +18,11 @@ namespace Cura520
             {
                 options.User.RequireUniqueEmail = true;
                 options.Password.RequireDigit = false;
-                options.Password.RequiredLength = 6;
+                options.Password.RequiredLength = 8;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireUppercase = false;
                 options.Password.RequireLowercase = false;
-                options.SignIn.RequireConfirmedEmail = true;
+                options.SignIn.RequireConfirmedEmail = false;
             })
                 .AddDefaultTokenProviders()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
@@ -36,21 +36,37 @@ namespace Cura520
 
             // Email Service
             services.AddTransient<IEmailSender, EmailSender>();
-            
-            // Generic Repositories
-            services.AddScoped<IRepository<Doctor>, Repository<Doctor>>();
-            services.AddScoped<IRepository<Patient>, Repository<Patient>>();
-            services.AddScoped<IRepository<ApplicationUserOTP>, Repository<ApplicationUserOTP>>();
-            
-            // Additional Repositories (optional - add if needed)
-            services.AddScoped<IRepository<Appointment>, Repository<Appointment>>();
-            services.AddScoped<IRepository<Invoice>, Repository<Invoice>>();
-            services.AddScoped<IRepository<MedicalHistory>, Repository<MedicalHistory>>();
-            services.AddScoped<IRepository<Prescription>, Repository<Prescription>>();
-            services.AddScoped<IRepository<PrescriptionItem>, Repository<PrescriptionItem>>();
-            
+
             // Database Initializer
             services.AddScoped<IDBInitializr, DBInitializr>();
+
+            // --- REPOSITORIES ---
+            // User Profiles
+            services.AddScoped<IRepository<Doctor>, Repository<Doctor>>();
+            services.AddScoped<IRepository<Patient>, Repository<Patient>>();
+            services.AddScoped<IRepository<Receptionist>, Repository<Receptionist>>();
+
+            // Core Logic
+            services.AddScoped<IRepository<Appointment>, Repository<Appointment>>();
+            services.AddScoped<IRepository<DoctorSchedule>, Repository<DoctorSchedule>>();
+            services.AddScoped<IRepository<MedicalHistory>, Repository<MedicalHistory>>();
+
+            // Billing & Services
+            services.AddScoped<IRepository<Invoice>, Repository<Invoice>>();
+            services.AddScoped<IRepository<InvoiceItem>, Repository<InvoiceItem>>();
+            services.AddScoped<IRepository<MedicalService>, Repository<MedicalService>>();
+
+            // Pharmacy/Prescriptions
+            services.AddScoped<IRepository<Prescription>, Repository<Prescription>>();
+            services.AddScoped<IRepository<PrescriptionItem>, Repository<PrescriptionItem>>();
+
+            // Security
+            services.AddScoped<IRepository<ApplicationUserOTP>, Repository<ApplicationUserOTP>>();
+
+
+
+            
+
         }
     }
 }

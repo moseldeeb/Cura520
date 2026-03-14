@@ -17,6 +17,8 @@ namespace Cura520.Models
         public DateTime AppointmentDate { get; set; }
         public Status Status { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+        // UpdatedAt is set to the current time whenever the appointment is modified
+        public DateTime UpdatedAt { get; set; } 
         public int PatientId { get; set; }
         public Patient Patient { get; set; }
         public int DoctorId { get; set; }

@@ -8,7 +8,7 @@ namespace Cura520.Models
         Patient,
         Doctor,
         Admin,
-        Staff
+        Receptionist
     }
     public class ApplicationUser : IdentityUser
     {

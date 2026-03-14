@@ -69,7 +69,7 @@ namespace Cura520
             // 2. Map for the Main App (Default landing page)
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{area=Admin}/{controller=Home}/{action=Index}/{id?}");
+                pattern: "{area=Admin}/{controller=Doctor}/{action=Create}/{id?}");
 
             app.Run();
         }
