@@ -16,7 +16,7 @@ public class EmailSender : IEmailSender
 
         var mailMessage = new MailMessage
         {
-            From = new MailAddress("Curamvc@gmail.com", "Cura Clinic Management"), // Branded name
+            From = new MailAddress("Curamvc@gmail.com", "Cura Clinic Management"), 
             Subject = subject,
             Body = htmlMessage,
             IsBodyHtml = true

@@ -90,24 +90,20 @@ namespace Cura520.Areas.Admin.Controllers
 
             var result = await _userManager.CreateAsync(user, model.Password);
 
+
             if (result.Succeeded)
             {
                 await _userManager.AddToRoleAsync(user, "Doctor");
-
-                // Link the Doctor profile to the newly created User
                 model.Doctor.ApplicationUserId = user.Id;
 
-                // 4. IMPORTANT: Attach the schedules from the VM to the Doctor object
+                model.Doctor.DoctorSchedules = new List<DoctorSchedule>();
+
                 if (model.DoctorSchedules != null && model.DoctorSchedules.Any())
                 {
-                    model.Doctor.DoctorSchedules = new List<DoctorSchedule>();
                     foreach (var schedule in model.DoctorSchedules)
                     {
-                        // Only add if user actually filled in times
-                        if (schedule.Day != default)
-                        {
-                            model.Doctor.DoctorSchedules.Add(schedule);
-                        }
+                        schedule.Doctor = model.Doctor;
+                        model.Doctor.DoctorSchedules.Add(schedule);
                     }
                 }
 
@@ -117,7 +113,6 @@ namespace Cura520.Areas.Admin.Controllers
                 return RedirectToAction(nameof(Home));
             }
 
-            // 5. If Identity failed (e.g. Password too weak), add errors to ModelState
             foreach (var error in result.Errors)
             {
                 ModelState.AddModelError("", error.Description);

@@ -24,7 +24,6 @@ namespace Cura520.Utilities
 
         public void Initialize()
         {
-            // 1. Push pending migrations
             try
             {
                 if (_db.Database.GetPendingMigrations().Any())
@@ -34,19 +33,27 @@ namespace Cura520.Utilities
             }
             catch (Exception ex)
             {
-                // Log error if needed: Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.Message);
             }
 
-            // 2. Create roles if they don't exist
+            string[] roles = {
+                              SD.Role_SuperAdmin,
+                              SD.Role_Admin,
+                              SD.Role_Doctor,
+                              SD.Role_Patient,
+                              SD.Role_Receptionist
+                            };
+
+            foreach (var role in roles)
+            {
+                if (!_roleManager.RoleExistsAsync(role).GetAwaiter().GetResult())
+                {
+                    _roleManager.CreateAsync(new IdentityRole(role)).GetAwaiter().GetResult();
+                }
+            }
+
             if (!_roleManager.RoleExistsAsync(SD.Role_SuperAdmin).GetAwaiter().GetResult())
             {
-                _roleManager.CreateAsync(new IdentityRole(SD.Role_SuperAdmin)).GetAwaiter().GetResult();
-                _roleManager.CreateAsync(new IdentityRole(SD.Role_Admin)).GetAwaiter().GetResult();
-                _roleManager.CreateAsync(new IdentityRole(SD.Role_Doctor)).GetAwaiter().GetResult();
-                _roleManager.CreateAsync(new IdentityRole(SD.Role_Patient)).GetAwaiter().GetResult();
-                _roleManager.CreateAsync(new IdentityRole(SD.Role_Receptionist)).GetAwaiter().GetResult();
-
-                // 3. Create the "God Account" (Super Admin)
                 var adminUser = new ApplicationUser
                 {
                     UserName = "CuraAdmin",
@@ -58,9 +65,6 @@ namespace Cura520.Utilities
                     EmailConfirmed = true,
                     Type = UserType.Admin
                 };
-
-
-
                 var result = _userManager.CreateAsync(adminUser, "Admin123*").GetAwaiter().GetResult();
 
                 if (result.Succeeded)
@@ -69,8 +73,6 @@ namespace Cura520.Utilities
                 }
             }
 
-            // 4. Seed basic medical services (ERP Price List)
-            // This ensures your billing system has items to select from immediately
             if (!_db.MedicalServices.Any())
             {
                 _db.MedicalServices.AddRange(new List<MedicalService>
@@ -109,6 +111,7 @@ namespace Cura520.Utilities
                         LastName = "Reception",
                         ApplicationUserId = receptionistUser.Id
                     });
+
                     _db.SaveChanges();
                 }
             }

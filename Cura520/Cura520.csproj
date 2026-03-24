@@ -28,6 +28,7 @@
 	  <Folder Include="wwwroot\css\Doctor\" />
 	  <Folder Include="wwwroot\css\Receptionist\" />
 	  <Folder Include="wwwroot\css\Patient\" />
+	  <Folder Include="wwwroot\Images\Receptionists\" />
 	</ItemGroup>
 
 

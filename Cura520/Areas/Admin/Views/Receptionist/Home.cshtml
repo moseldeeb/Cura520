@@ -1,22 +1,22 @@
-﻿@model IEnumerable<Cura520.Models.Doctor>
+﻿@model IEnumerable<Cura520.Models.Receptionist>
 
 @{
-    ViewData["Title"] = "Doctors List";
+    ViewData["Title"] = "Receptionists List";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
 <div class="container-fluid">
 
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Doctors Management</h1>
+        <h1 class="h3 mb-0 text-gray-800">Receptionists Management</h1>
         <a asp-action="Create" class="btn btn-sm btn-primary shadow-sm">
-            <i class="fas fa-plus fa-sm text-white-50"></i> Add New Doctor
+            <i class="fas fa-plus fa-sm text-white-50"></i> Add New Receptionist
         </a>
     </div>
 
     <div class="card shadow mb-4">
         <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Registered Doctors</h6>
+            <h6 class="m-0 font-weight-bold text-primary">Registered Receptionists</h6>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -24,9 +24,7 @@
                     <thead class="bg-light">
                         <tr>
                             <th>Full Name</th>
-                            <th>Specialization</th>
                             <th>Phone</th>
-                            <th>Fees</th>
                             <th class="text-center">Actions</th>
                         </tr>
                     </thead>
@@ -44,9 +42,7 @@
                         {
                             <tr>
                                 <td class="font-weight-bold">@item.FirstName @item.LastName</td>
-                                <td>@item.Specialty</td>
                                 <td>@item.PhoneNumber</td>
-                                <td><span class="badge badge-primary">@item.ConsultationFee</span></td>
                                 <td class="text-center">
                                     <div class="btn-group">
                                         <a asp-action="Update" asp-route-id="@item.Id" class="btn btn-info btn-sm btn-circle" title="Edit">
@@ -57,7 +53,7 @@
                                             <i class="fas fa-info-circle"></i>
                                         </a>
 
-                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Delete this doctor?');" style="display:inline;">
+                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Delete this receptionist?');" style="display:inline;">
                                             <button type="submit" class="btn btn-danger btn-sm btn-circle">
                                                 <i class="fas fa-trash"></i>
                                             </button>
@@ -82,7 +78,7 @@
         $(document).ready(function() {
             $('#dataTable').DataTable({
                 "language": {
-                    "search": "Search Doctors:",
+                    "search": "Search Receptionists:",
                     "lengthMenu": "Show _MENU_ entries per page"
                 }
             });

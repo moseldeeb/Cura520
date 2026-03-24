@@ -1,0 +1,72 @@
+﻿@model Cura520.ViewModel.ReceptionistVM
+
+@{
+    ViewData["Title"] = "Update Receptionist";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Edit Receptionist: @Model.Receptionist.FirstName @Model.Receptionist.LastName</h1>
+
+    <form asp-action="Update" method="post" enctype="multipart/form-data">
+        <input type="hidden" asp-for="Receptionist.Id" />
+        <input type="hidden" asp-for="Receptionist.Img" />
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Receptionist Profile</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label>First Name</label>
+                                    <input asp-for="Receptionist.FirstName" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label>Last Name</label>
+                                    <input asp-for="Receptionist.LastName" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="row">
+                            
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label>Phone Number</label>
+                                    <input asp-for="Receptionist.PhoneNumber" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        
+
+                        <button type="submit" class="btn btn-success btn-icon-split mt-3">
+                            <span class="icon text-white-50"><i class="fas fa-save"></i></span>
+                            <span class="text">Update Receptionist</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('imgInput').onchange = function (evt) {
+            const [file] = this.files;
+            if (file) {
+                document.getElementById('imgPreview').src = URL.createObjectURL(file);
+            }
+        };
+    </script>
+}

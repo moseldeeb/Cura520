@@ -1,0 +1,103 @@
+﻿@using Cura520.Models
+@model Cura520.ViewModel.ReceptionistVM
+
+@{
+    ViewData["Title"] = "Add New Receptionist";
+    Layout = "_AdminLayout";
+}
+
+
+<div class="container-fluid">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Receptionist Management</h1>
+        <a asp-action="Home" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to List
+        </a>
+    </div>
+
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Account Credentials</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label asp-for="Email"></label>
+                            <input asp-for="Email" class="form-control" placeholder="Email Address..." />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="Password"></label>
+                                    <input asp-for="Password" type="password" class="form-control" />
+                                    <span asp-validation-for="Password" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label asp-for="ConfirmPassword"></label>
+                                    <input asp-for="ConfirmPassword" type="password" class="form-control" />
+                                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Receptionist Profile</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>First Name</label>
+                                    <input asp-for="Receptionist.FirstName" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Last Name</label>
+                                    <input asp-for="Receptionist.LastName" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input asp-for="Receptionist.PhoneNumber" class="form-control" />
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Profile Image</label>
+                            <input type="file" name="img" class="form-control-file" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-5">
+            <button type="submit" class="btn btn-primary btn-icon-split">
+                <span class="icon text-white-50">
+                    <i class="fas fa-check"></i>
+                </span>
+                <span class="text">Save Receptionist Profile</span>
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+  
+}

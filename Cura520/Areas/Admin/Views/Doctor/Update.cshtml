@@ -2,11 +2,11 @@
 
 @{
     ViewData["Title"] = "Update Doctor";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    Layout = "_AdminLayout";
 }
 
 <div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800">Edit Doctor: @Model.Doctor.ApplicationUser.UserName</h1>
+    <h1 class="h3 mb-4 text-gray-800">Edit Doctor: @Model.Doctor.FirstName @Model.Doctor.LastName</h1>
 
     <form asp-action="Update" method="post" enctype="multipart/form-data">
         <input type="hidden" asp-for="Doctor.Id" />
@@ -34,10 +34,27 @@
                             </div>
                         </div>
 
-                        <div class="form-group mb-3">
-                            <label>Specialty</label>
-                            <input asp-for="Doctor.Specialty" class="form-control" />
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label>Specialty</label>
+                                    <input asp-for="Doctor.Specialty" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label>Phone Number</label>
+                                    <input asp-for="Doctor.PhoneNumber" class="form-control" />
+                                </div>
+                            </div>
                         </div>
+                        
+                        <div class="form-group mb-3">
+                            <label>Consultation Fees</label>
+                            <input asp-for="Doctor.ConsultationFee" class="form-control" />
+                        </div>
+                        
 
                         <button type="submit" class="btn btn-success btn-icon-split mt-3">
                             <span class="icon text-white-50"><i class="fas fa-save"></i></span>
