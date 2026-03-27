@@ -1,5 +1,6 @@
 ﻿@using Cura520.Models
-@model Cura520.ViewModel.ReceptionistVM
+@using Cura520.ViewModel.Admin.Receptionist
+@model CreateReceptionistVM
 
 @{
     ViewData["Title"] = "Add New Receptionist";
@@ -61,20 +62,20 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>First Name</label>
-                                    <input asp-for="Receptionist.FirstName" class="form-control" />
+                                    <input asp-for="FirstName" class="form-control" />
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label>Last Name</label>
-                                    <input asp-for="Receptionist.LastName" class="form-control" />
+                                    <input asp-for="LastName" class="form-control" />
                                 </div>
                             </div>
                         </div>
                         
                         <div class="form-group">
                             <label>Phone Number</label>
-                            <input asp-for="Receptionist.PhoneNumber" class="form-control" />
+                            <input asp-for="PhoneNumber" class="form-control" />
                         </div>
                         
                         <div class="form-group">

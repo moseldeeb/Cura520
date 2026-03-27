@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Azure.Identity;
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 
 namespace Cura520.Models
@@ -12,6 +13,7 @@ namespace Cura520.Models
     }
     public class ApplicationUser : IdentityUser
     {
+        
         [Required, MaxLength(25)]
         public string FirstName { get; set; }
         [Required, MaxLength(25)]

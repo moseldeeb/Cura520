@@ -6,7 +6,6 @@ namespace Cura520.Models
     public class Doctor
     {
         public int Id { get; set; }
-
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Img { get; set; } = "defaultImg.png";

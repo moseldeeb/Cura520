@@ -1,4 +1,5 @@
-﻿@model Cura520.ViewModel.ReceptionistVM
+﻿@using Cura520.ViewModel.Admin.Receptionist
+@model UpdateReceptionistVM
 
 @{
     ViewData["Title"] = "Update Receptionist";
@@ -6,12 +7,11 @@
 }
 
 <div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800">Edit Receptionist: @Model.Receptionist.FirstName @Model.Receptionist.LastName</h1>
+    <h1 class="h3 mb-4 text-gray-800">Edit Receptionist: @Model.FirstName @Model.LastName</h1>
 
     <form asp-action="Update" method="post" enctype="multipart/form-data">
-        <input type="hidden" asp-for="Receptionist.Id" />
-        <input type="hidden" asp-for="Receptionist.Img" />
-
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="Img" />
         <div class="row">
             <div class="col-lg-8">
                 <div class="card shadow mb-4">
@@ -23,13 +23,13 @@
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label>First Name</label>
-                                    <input asp-for="Receptionist.FirstName" class="form-control" />
+                                    <input asp-for="FirstName" class="form-control" />
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label>Last Name</label>
-                                    <input asp-for="Receptionist.LastName" class="form-control" />
+                                    <input asp-for="LastName" class="form-control" />
                                 </div>
                             </div>
                         </div>
@@ -40,7 +40,7 @@
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label>Phone Number</label>
-                                    <input asp-for="Receptionist.PhoneNumber" class="form-control" />
+                                    <input asp-for="PhoneNumber" class="form-control" />
                                 </div>
                             </div>
                         </div>

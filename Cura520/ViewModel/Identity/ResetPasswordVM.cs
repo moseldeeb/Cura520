@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Cura520.ViewModel
+namespace Cura520.ViewModel.Identity
 {
     public class ResetPasswordVM
     {

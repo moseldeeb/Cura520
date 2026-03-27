@@ -1,6 +1,9 @@
 ﻿using Cura520.Models;
 using Cura520.Repos;
 using Cura520.Utilities;
+using Cura520.ViewModel.Admin.Doctor;
+using Cura520.ViewModel.Admin.Receptionist;
+using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -41,26 +44,21 @@ namespace Cura520.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult Create()
         {
-            var model = new ReceptionistVM
-            {
-                Receptionist = new Receptionist()
-            };
-            return View(model);
+            return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(ReceptionistVM model, IFormFile? img)
+        public async Task<IActionResult> Create(CreateReceptionistVM  receptionistVM)
         {
-            // 1. Check if the model is valid
-            //if (!ModelState.IsValid)
-            //{
-            //    return View(model);
-            //}
+            //if (!ModelState.IsValid) return View(model);
 
-            // 2. Handle Image Upload
-            if (img != null && img.Length > 0)
+
+            var Receptionist = receptionistVM.Adapt<Receptionist>();
+
+
+            if (receptionistVM.ImageFile != null && receptionistVM.ImageFile.Length > 0)
             {
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(img.FileName);
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(receptionistVM.ImageFile.FileName);
                 var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Images/Receptionists", fileName);
 
                 var directory = Path.GetDirectoryName(filePath);
@@ -68,30 +66,27 @@ namespace Cura520.Areas.Admin.Controllers
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    await img.CopyToAsync(stream);
+                    await receptionistVM.ImageFile.CopyToAsync(stream);
                 }
-                model.Receptionist.Img = fileName;
+                receptionistVM.Img = fileName;
             }
 
-            var user = new ApplicationUser
-            {
-                UserName = model.Email,
-                Email = model.Email,
-                FirstName = model.Receptionist.FirstName,
-                LastName = model.Receptionist.LastName,
-                Type = UserType.Receptionist,
-                EmailConfirmed = true
-            };
+            var user = receptionistVM.Adapt<ApplicationUser>();
 
-            var result = await _userManager.CreateAsync(user, model.Password);
+            user.UserName = receptionistVM.Email;
+            user.Type = UserType.Receptionist;
+            user.EmailConfirmed = true;
+            user.PhoneNumberConfirmed = true;
+
+            var result = await _userManager.CreateAsync(user, receptionistVM.Password);
 
 
             if (result.Succeeded)
             {
                 await _userManager.AddToRoleAsync(user, "Receptionist");
-                model.Receptionist.ApplicationUserId = user.Id;
+                Receptionist.ApplicationUserId = user.Id;
 
-                await _receptionistRepository.AddAsync(model.Receptionist);
+                await _receptionistRepository.AddAsync(Receptionist);
                 await _receptionistRepository.CommitAsync();
 
                 return RedirectToAction(nameof(Home));
@@ -102,54 +97,106 @@ namespace Cura520.Areas.Admin.Controllers
                 ModelState.AddModelError("", error.Description);
             }
 
-            return View(model);
+            return View(receptionistVM);
         }
 
         [HttpGet]
         public async Task<IActionResult> Update(int id)
         {
-            var receptionist = await _receptionistRepository.GetOneAsync(r => r.Id == id);
+            var receptionistInDB = await _receptionistRepository.GetOneAsync(
+                r => r.Id == id
+            );
 
-            if (receptionist is null) return NotFound();
+            if (receptionistInDB is null) return NotFound();
+            var updateReceptionist = receptionistInDB.Adapt<UpdateReceptionistVM>();
 
-            return View(new ReceptionistVM()
+
+            if (!string.IsNullOrEmpty(receptionistInDB.ApplicationUserId))
             {
-                Receptionist = receptionist
-            });
+                var user = await _userManager.FindByIdAsync(receptionistInDB.ApplicationUserId);
+                if (user != null)
+                {
+                    updateReceptionist.Email = user.Email;
+                    updateReceptionist.FirstName = user.FirstName;
+                    updateReceptionist.LastName = user.LastName;
+                    updateReceptionist.PhoneNumber = user.PhoneNumber;
+                }
+            }
+
+            return View(updateReceptionist);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Update(ReceptionistVM model, IFormFile? img)
+        public async Task<IActionResult> Update(UpdateReceptionistVM receptionistVM)
         {
-            var receptionistInDB = await _receptionistRepository.GetOneAsync(c => c.Id == model.Receptionist.Id, tracked: false);
-            if (receptionistInDB is null) return NotFound();
+            var receptionistInDB = await _receptionistRepository.GetOneAsync(
+                c => c.Id == receptionistVM.Id, tracked: false
+                //,include: q => q.Include(d => d.DoctorSchedules)
+                );
+            //if (!ModelState.IsValid)
+            //{
+            //    doctorVM.Img = doctorInDB.Img;
+            //    return View(doctorVM);
+            //}
 
-            if (img != null && img.Length > 0)
+            //if (doctorInDB is null) return NotFound();
+
+
+
+
+            //var doctorUser = await _userManager.FindByIdAsync(doctorInDB.ApplicationUserId);
+            //if ()
+            //{
+            //    doctorUser.FirstName = doctorVM.FirstName;
+            //    doctorUser.LastName = doctorVM.LastName;
+            //    doctorUser.PhoneNumber = doctorVM.PhoneNumber;
+
+            //    // Only update password if the user actually typed a new one
+            //    if (!string.IsNullOrWhiteSpace(doctorVM.Password))
+            //    {
+            //        var token = await _userManager.GeneratePasswordResetTokenAsync(doctorUser);
+            //        await _userManager.ResetPasswordAsync(doctorUser, token, doctorVM.Password);
+            //    }
+
+            //    var userResult = await _userManager.UpdateAsync(doctorUser);
+            //    if (!userResult.Succeeded)
+            //    {
+            //        foreach (var error in userResult.Errors)
+            //            ModelState.AddModelError("", error.Description);
+            //        return View(doctorVM);
+            //    }
+            //}
+
+
+
+            var receptionist = receptionistVM.Adapt<Receptionist>();
+
+            if (receptionistVM.ImageFile != null && receptionistVM.ImageFile.Length > 0)
             {
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(img.FileName);
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(receptionistVM.ImageFile.FileName);
                 var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Images/Receptionists", fileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    await img.CopyToAsync(stream);
+                    await receptionistVM.ImageFile.CopyToAsync(stream);
                 }
 
-                if (!string.IsNullOrEmpty(receptionistInDB.Img))
-                {
-                    var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Images/Receptionists", receptionistInDB.Img);
-                    if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
-                }
-                model.Receptionist.Img = fileName;
+                //if (!string.IsNullOrEmpty(receptionist.Img))
+                //{
+                receptionist.Img = fileName;
+
+                var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Images/Receptionists", receptionistInDB.Img);
+
+                if (System.IO.File.Exists(oldPath))
+                    System.IO.File.Delete(oldPath);
+                //}
             }
             else
             {
-                model.Receptionist.Img = receptionistInDB.Img;
+                receptionist.Img = receptionistInDB.Img;
             }
-
-            model.Receptionist.ApplicationUserId = receptionistInDB.ApplicationUserId;
-
-            _receptionistRepository.Update(model.Receptionist);
+            _receptionistRepository.Update(receptionist);
             await _receptionistRepository.CommitAsync();
             return RedirectToAction(nameof(Home));
         }
@@ -157,16 +204,16 @@ namespace Cura520.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
-            var receptionist = await _receptionistRepository.GetOneAsync(c => c.Id == id);
-            if (receptionist is null) return NotFound();
+            var receptionistInDB = await _receptionistRepository.GetOneAsync(c => c.Id == id);
+            if (receptionistInDB is null) return NotFound();
 
-            if (!string.IsNullOrEmpty(receptionist.Img))
+            if (!string.IsNullOrEmpty(receptionistInDB.Img))
             {
-                var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Images/Receptionists", receptionist.Img);
+                var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Images/Receptionists", receptionistInDB.Img);
                 if (System.IO.File.Exists(path)) System.IO.File.Delete(path);
             }
 
-            _receptionistRepository.Delete(receptionist);
+            _receptionistRepository.Delete(receptionistInDB);
             await _receptionistRepository.CommitAsync();
 
             return RedirectToAction(nameof(Home));

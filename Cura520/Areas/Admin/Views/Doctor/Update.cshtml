@@ -1,4 +1,5 @@
-﻿@model Cura520.ViewModel.DoctorVM
+﻿@using Cura520.ViewModel.Admin.Doctor
+@model UpdateDoctorVM
 
 @{
     ViewData["Title"] = "Update Doctor";
@@ -6,11 +7,11 @@
 }
 
 <div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800">Edit Doctor: @Model.Doctor.FirstName @Model.Doctor.LastName</h1>
+    <h1 class="h3 mb-4 text-gray-800">Edit Doctor: @Model.FirstName @Model.LastName</h1>
 
     <form asp-action="Update" method="post" enctype="multipart/form-data">
-        <input type="hidden" asp-for="Doctor.Id" />
-        <input type="hidden" asp-for="Doctor.Img" />
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="Img" />
 
         <div class="row">
             <div class="col-lg-8">
@@ -23,13 +24,13 @@
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label>First Name</label>
-                                    <input asp-for="Doctor.FirstName" class="form-control" />
+                                    <input asp-for="FirstName" class="form-control" />
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label>Last Name</label>
-                                    <input asp-for="Doctor.LastName" class="form-control" />
+                                    <input asp-for="LastName" class="form-control" />
                                 </div>
                             </div>
                         </div>
@@ -39,22 +40,29 @@
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label>Specialty</label>
-                                    <input asp-for="Doctor.Specialty" class="form-control" />
+                                    <input asp-for="Specialty" class="form-control" />
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label>Phone Number</label>
-                                    <input asp-for="Doctor.PhoneNumber" class="form-control" />
+                                    <input asp-for="PhoneNumber" class="form-control" />
                                 </div>
                             </div>
                         </div>
                         
                         <div class="form-group mb-3">
                             <label>Consultation Fees</label>
-                            <input asp-for="Doctor.ConsultationFee" class="form-control" />
+                            <input asp-for="ConsultationFee" class="form-control" />
                         </div>
                         
+                        <div class="form-group mb-3">
+                            <label>Profile Image</label>
+                            <div class="mb-2">
+                                <img id="imgPreview" src="~/Images/Doctors/@Model.Img" style="width:100px; height:100px; object-fit:cover;" class="img-thumbnail" />
+                            </div>
+                            <input asp-for="ImageFile" type="file" id="imgInput" class="form-control-file" />
+                        </div>
 
                         <button type="submit" class="btn btn-success btn-icon-split mt-3">
                             <span class="icon text-white-50"><i class="fas fa-save"></i></span>
@@ -108,5 +116,17 @@
                 document.getElementById('imgPreview').src = URL.createObjectURL(file);
             }
         };
+
+                function deleteSchedule(id) {
+            if (confirm("Are you sure you want to delete this shift?")) {
+                $.post('@Url.Action("DeleteSchedule", "Doctor")', { id: id }, function (res) {
+                    if (res.success) {
+                        $("#row-" + id).fadeOut(300, function() { $(this).remove(); });
+                    } else {
+                        alert("Error: " + res.message);
+                    }
+                });
+            }
+        }
     </script>
 }

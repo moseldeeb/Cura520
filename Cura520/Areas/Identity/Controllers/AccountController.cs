@@ -1,7 +1,7 @@
 ﻿using AspNetCoreGeneratedDocument;
 using Cura520.Models;
 using Cura520.Repos;
-using Cura520.ViewModel;
+using Cura520.ViewModel.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;

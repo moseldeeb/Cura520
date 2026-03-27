@@ -1,6 +1,7 @@
 using Cura520.DataAccess;
 using Cura520.Models;
 using Cura520.Utilities;
+using Mapster;
 
 namespace Cura520
 {
@@ -17,6 +18,10 @@ namespace Cura520
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             builder.Services.Config(connectionString);
 
+
+
+            // This prevents Mapster from infinitely looping through navigation properties
+            TypeAdapterConfig.GlobalSettings.Default.PreserveReference(true);
             var app = builder.Build();
 
             // Call this before app.Run()

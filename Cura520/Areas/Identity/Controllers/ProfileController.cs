@@ -1,5 +1,5 @@
 ﻿using Cura520.Models;
-using Cura520.ViewModel;
+using Cura520.ViewModel.Identity;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
