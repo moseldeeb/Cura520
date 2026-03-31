@@ -166,6 +166,16 @@ namespace Cura520.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Update(UpdateDoctorVM doctorVM)
         {
+            ModelState.Remove(nameof(UpdateDoctorVM.ImageFile));
+            ModelState.Remove(nameof(UpdateDoctorVM.Password));
+            ModelState.Remove(nameof(UpdateDoctorVM.ConfirmPassword));
+
+            if (!string.IsNullOrWhiteSpace(doctorVM.Password) &&
+                 doctorVM.Password != doctorVM.ConfirmPassword)
+            {
+                ModelState.AddModelError(nameof(doctorVM.ConfirmPassword), "Passwords do not match.");
+            }
+
             if (!ModelState.IsValid)
             {
                 return View(doctorVM);
@@ -179,8 +189,18 @@ namespace Cura520.Areas.Admin.Controllers
 
             doctorVM.Img = await ProcessDoctorImageAsync(doctorVM, doctorInDB.Img);
 
-            var doctor = doctorVM.Adapt<Doctor>();
-
+            var doctor = new Doctor
+            {
+                Id = doctorVM.Id,
+                ApplicationUserId = doctorVM.ApplicationUserId,
+                FirstName = doctorVM.FirstName,
+                LastName = doctorVM.LastName,
+                Specialty = doctorVM.Specialty,
+                PhoneNumber = doctorVM.PhoneNumber,
+                ConsultationFee = doctorVM.ConsultationFee,
+                Img = doctorVM.Img,
+                IsDeleted = false
+            };
             await SyncDoctorSchedulesAsync(doctorVM);
 
             _doctorRepository.Update(doctor);
@@ -247,13 +267,34 @@ namespace Cura520.Areas.Admin.Controllers
             doctorUser.FirstName = doctorVM.FirstName;
             doctorUser.LastName = doctorVM.LastName;
             doctorUser.PhoneNumber = doctorVM.PhoneNumber;
-            doctorUser.Email = doctorVM.Email;
-            doctorUser.UserName = doctorVM.Email;
+
+            if (!string.IsNullOrWhiteSpace(doctorVM.Email) &&
+        !doctorVM.Email.Equals(doctorUser.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                var existingUser = await _userManager.FindByEmailAsync(doctorVM.Email);
+                if (existingUser != null && existingUser.Id != doctorUser.Id)
+                {
+                    ModelState.AddModelError("", "This email is already in use by another account.");
+                    return false;
+                }
+
+                doctorUser.Email = doctorVM.Email;
+                doctorUser.NormalizedEmail = doctorVM.Email.ToUpperInvariant();
+                doctorUser.UserName = doctorVM.Email;
+                doctorUser.NormalizedUserName = doctorVM.Email.ToUpperInvariant();
+            }
 
             if (!string.IsNullOrWhiteSpace(doctorVM.Password))
             {
                 var token = await _userManager.GeneratePasswordResetTokenAsync(doctorUser);
-                await _userManager.ResetPasswordAsync(doctorUser, token, doctorVM.Password);
+                var passwordResult = await _userManager.ResetPasswordAsync(doctorUser, token, doctorVM.Password);
+
+                if (!passwordResult.Succeeded)
+                {
+                    foreach (var error in passwordResult.Errors)
+                        ModelState.AddModelError("", error.Description);
+                    return false;
+                }
             }
 
             var result = await _userManager.UpdateAsync(doctorUser);

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Cura520.Validations
 {
@@ -14,13 +15,11 @@ namespace Cura520.Validations
 
         public override bool IsValid(object? value)
         {
+            if (value is null) return true;
             if (value is IFormFile FormImg)
             {
-                var ImgExtention = Path.GetExtension(FormImg.FileName).ToLower(); 
-                if (AllowedExtentions.Contains(ImgExtention))
-                {
-                    return true; 
-                }
+                var ImgExtention = Path.GetExtension(FormImg.FileName).ToLower();
+                return AllowedExtentions.Contains(ImgExtention);
             }
             return false; 
         }

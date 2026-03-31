@@ -9,7 +9,7 @@ namespace Cura520.Models
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Img { get; set; } = "defaultImg.png";
-        public string ApplicationUserId { get; set; }
+        public string? ApplicationUserId { get; set; }
         [ForeignKey("ApplicationUserId")]
         public ApplicationUser ApplicationUser { get; set; }
         [Required]
