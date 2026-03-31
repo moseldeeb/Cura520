@@ -50,7 +50,7 @@ namespace Cura520.Areas.Admin.Controllers
         {
             var model = new CreateDoctorVM
             {
-                DoctorSchedules = [new()] 
+                DoctorSchedules = [new()]
             };
             return View(model);
         }
@@ -58,13 +58,13 @@ namespace Cura520.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(CreateDoctorVM doctorVM)
         {
-            //if (!ModelState.IsValid)
-            //{
-            //    return View(doctorVM);
-            //}
+            if (!ModelState.IsValid)
+            {
+                return View(doctorVM);
+            }
 
             var Doctor = doctorVM.Adapt<Doctor>();
-            
+
             if (doctorVM.ImageFile != null && doctorVM.ImageFile.Length > 0)
             {
                 var fileName = Guid.NewGuid().ToString() + Path.GetExtension(doctorVM.ImageFile.FileName);
@@ -80,27 +80,16 @@ namespace Cura520.Areas.Admin.Controllers
                 Doctor.Img = fileName;
             }
 
-            //var user = new ApplicationUser
-            //{
-            //    UserName = "Dr. " + model.FirstName + " " + model.LastName,
-            //    Email = model.Email,
-            //    FirstName = model.FirstName,
-            //    LastName = model.LastName,
-            //    PhoneNumber = model.PhoneNumber,
-            //    PhoneNumberConfirmed = true,
-            //    Type = UserType.Doctor,
-            //    EmailConfirmed = true
-            //};
             var user = doctorVM.Adapt<ApplicationUser>();
 
-            user.UserName = doctorVM.Email; 
+            user.UserName = doctorVM.Email;
             user.Type = UserType.Doctor;
             user.EmailConfirmed = true;
             user.PhoneNumberConfirmed = true;
 
 
             var result = await _userManager.CreateAsync(user, doctorVM.Password);
-            
+
 
             if (result.Succeeded)
             {
@@ -113,24 +102,20 @@ namespace Cura520.Areas.Admin.Controllers
                     Day = s.Day,
                     StartTime = s.StartTime,
                     EndTime = s.EndTime,
-                    Doctor = Doctor // Sets the foreign key relationship
+                    Doctor = Doctor
                 })];
+                try
+                {
+                    await _doctorRepository.AddAsync(Doctor);
+                    await _doctorRepository.CommitAsync();
 
-                //var doctorSchedules = doctorVM.DoctorSchedules.Adapt<List<DoctorSchedule>>();
-
-                //if (doctorSchedules != null && doctorSchedules.Any())
-                //{
-                //    foreach (var schedule in doctorSchedules)
-                //    {
-                //        schedule.Doctor = Doctor;
-                //        Doctor.DoctorSchedules.Add(schedule);
-                //    }
-                //}
-
-                await _doctorRepository.AddAsync(Doctor);
-                await _doctorRepository.CommitAsync();
-
-                return RedirectToAction(nameof(Home));
+                    return RedirectToAction(nameof(Home));
+                }
+                catch (Exception)
+                {
+                    await _userManager.DeleteAsync(user);
+                    ModelState.AddModelError("", "An error occurred while saving the doctor profile. Please try again.");
+                }
             }
 
             foreach (var error in result.Errors)
@@ -153,7 +138,7 @@ namespace Cura520.Areas.Admin.Controllers
 
             var updateDoctor = doctorInDB.Adapt<UpdateDoctorVM>();
 
-            updateDoctor.DoctorSchedules = doctorInDB.DoctorSchedules?.Select(s => new DoctorSchedule
+            updateDoctor.DoctorSchedules = doctorInDB.DoctorSchedules?.Select(s => new ScheduleVM
             {
                 Id = s.Id,
                 Day = s.Day,
@@ -181,75 +166,26 @@ namespace Cura520.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Update(UpdateDoctorVM doctorVM)
         {
+            if (!ModelState.IsValid)
+            {
+                return View(doctorVM);
+            }
 
-            var doctorInDB = await _doctorRepository.GetOneAsync(
-                c => c.Id == doctorVM.Id, tracked: false
-                //,include: q => q.Include(d => d.DoctorSchedules)
-                );
-            //if (!ModelState.IsValid)
-            //{
-            //    doctorVM.Img = doctorInDB.Img;
-            //    return View(doctorVM);
-            //}
+            var doctorInDB = await _doctorRepository.GetOneAsync(c => c.Id == doctorVM.Id, tracked: false);
+            if (doctorInDB is null) return NotFound();
 
-            //if (doctorInDB is null) return NotFound();
-            
+            var userUpdateSuccess = await UpdateDoctorCredentialsAsync(doctorVM);
+            if (!userUpdateSuccess) return View(doctorVM); 
 
-
-
-            //var doctorUser = await _userManager.FindByIdAsync(doctorInDB.ApplicationUserId);
-            //if ()
-            //{
-            //    doctorUser.FirstName = doctorVM.FirstName;
-            //    doctorUser.LastName = doctorVM.LastName;
-            //    doctorUser.PhoneNumber = doctorVM.PhoneNumber;
-
-            //    // Only update password if the user actually typed a new one
-            //    if (!string.IsNullOrWhiteSpace(doctorVM.Password))
-            //    {
-            //        var token = await _userManager.GeneratePasswordResetTokenAsync(doctorUser);
-            //        await _userManager.ResetPasswordAsync(doctorUser, token, doctorVM.Password);
-            //    }
-
-            //    var userResult = await _userManager.UpdateAsync(doctorUser);
-            //    if (!userResult.Succeeded)
-            //    {
-            //        foreach (var error in userResult.Errors)
-            //            ModelState.AddModelError("", error.Description);
-            //        return View(doctorVM);
-            //    }
-            //}
-
-
+            doctorVM.Img = await ProcessDoctorImageAsync(doctorVM, doctorInDB.Img);
 
             var doctor = doctorVM.Adapt<Doctor>();
 
-            if (doctorVM.ImageFile != null && doctorVM.ImageFile.Length > 0)
-            {
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(doctorVM.ImageFile.FileName);
-                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Images/Doctors", fileName);
+            await SyncDoctorSchedulesAsync(doctorVM);
 
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await doctorVM.ImageFile.CopyToAsync(stream);
-                }
-
-                //if (!string.IsNullOrEmpty(doctor.Img))
-                //{
-                    doctor.Img = fileName;
-
-                    var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Images/Doctors", doctorInDB.Img);
-                   
-                    if (System.IO.File.Exists(oldPath)) 
-                        System.IO.File.Delete(oldPath);
-                //}
-            }
-            else
-            {
-                doctorVM.Img = doctorInDB.Img;
-            }
             _doctorRepository.Update(doctor);
             await _doctorRepository.CommitAsync();
+
             return RedirectToAction(nameof(Home));
         }
 
@@ -260,8 +196,18 @@ namespace Cura520.Areas.Admin.Controllers
             if (doctorInDb is null) return NotFound();
 
             var doctorUser = await _userManager.FindByIdAsync(doctorInDb.ApplicationUserId);
+            if (doctorUser is null)
+            return NotFound();
 
-            if (doctorUser is null) return NotFound();
+            var schedules = await _doctorScheduleRepository.GetAsync(s => s.DoctorId == doctorInDb.Id);
+            if (schedules != null && schedules.Any())
+            {
+                foreach (var schedule in schedules)
+                {
+                    _doctorScheduleRepository.Delete(schedule);
+                }
+                await _doctorScheduleRepository.CommitAsync();
+            }
 
             if (!string.IsNullOrEmpty(doctorInDb.Img))
             {
@@ -287,6 +233,97 @@ namespace Cura520.Areas.Admin.Controllers
             await _doctorScheduleRepository.CommitAsync();
 
             return Json(new { success = true });
+        }
+
+        private async Task<bool> UpdateDoctorCredentialsAsync(UpdateDoctorVM doctorVM)
+        {
+            var doctorUser = await _userManager.FindByIdAsync(doctorVM.ApplicationUserId);
+            if (doctorUser == null)
+            {
+                ModelState.AddModelError("", "Associated user not found.");
+                return false;
+            }
+
+            doctorUser.FirstName = doctorVM.FirstName;
+            doctorUser.LastName = doctorVM.LastName;
+            doctorUser.PhoneNumber = doctorVM.PhoneNumber;
+            doctorUser.Email = doctorVM.Email;
+            doctorUser.UserName = doctorVM.Email;
+
+            if (!string.IsNullOrWhiteSpace(doctorVM.Password))
+            {
+                var token = await _userManager.GeneratePasswordResetTokenAsync(doctorUser);
+                await _userManager.ResetPasswordAsync(doctorUser, token, doctorVM.Password);
+            }
+
+            var result = await _userManager.UpdateAsync(doctorUser);
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError("", error.Description);
+                return false;
+            }
+            return true;
+        }
+
+        private async Task<string> ProcessDoctorImageAsync(UpdateDoctorVM doctorVM, string oldImageName)
+        {
+            if (doctorVM.ImageFile != null && doctorVM.ImageFile.Length > 0)
+            {
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(doctorVM.ImageFile.FileName);
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Images/Doctors", fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await doctorVM.ImageFile.CopyToAsync(stream);
+                }
+
+                var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Images/Doctors", oldImageName);
+                if (System.IO.File.Exists(oldPath) && oldImageName != "defaultImg.png")
+                {
+                    System.IO.File.Delete(oldPath);
+                }
+                return fileName;
+            }
+
+            return oldImageName; 
+        }
+
+        private async Task SyncDoctorSchedulesAsync(UpdateDoctorVM doctorVM)
+        {
+            var currentSchedules = await _doctorScheduleRepository.GetAsync(s => s.DoctorId == doctorVM.Id);
+            var incomingSchedules = doctorVM.DoctorSchedules ?? new List<ScheduleVM>();
+
+            var schedulesToDelete = currentSchedules.Where(db => !incomingSchedules.Any(vm => vm.Id == db.Id)).ToList();
+            foreach (var schedule in schedulesToDelete)
+            {
+                _doctorScheduleRepository.Delete(schedule);
+            }
+
+            foreach (var item in incomingSchedules)
+            {
+                if (item.Id == 0) 
+                {
+                    await _doctorScheduleRepository.AddAsync(new DoctorSchedule
+                    {
+                        Day = item.Day,
+                        StartTime = item.StartTime,
+                        EndTime = item.EndTime,
+                        DoctorId = doctorVM.Id
+                    });
+                }
+                else 
+                {
+                    var scheduleToUpdate = currentSchedules.FirstOrDefault(s => s.Id == item.Id);
+                    if (scheduleToUpdate != null)
+                    {
+                        scheduleToUpdate.Day = item.Day;
+                        scheduleToUpdate.StartTime = item.StartTime;
+                        scheduleToUpdate.EndTime = item.EndTime;
+                        _doctorScheduleRepository.Update(scheduleToUpdate);
+                    }
+                }
+            }
         }
     }
 }

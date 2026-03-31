@@ -6,7 +6,7 @@ namespace Cura520.ViewModel.Admin.Doctor
 {
     public class UpdateDoctorVM
     {
-        public string? ApplicationUserId { get; set; }
+        public string ApplicationUserId { get; set; }
        
         [EmailAddress]
         public string Email { get; set; }
@@ -27,6 +27,6 @@ namespace Cura520.ViewModel.Admin.Doctor
         [AllowedExtentions(new[] { ".png", ".jpg", ".jpeg", ".gif" })]
         public IFormFile ImageFile { get; set; }
         public string Img { get; set; }
-        public List<DoctorSchedule> DoctorSchedules { get; set; } = new List<DoctorSchedule>();
+        public List<ScheduleVM> DoctorSchedules { get; set; } = [];
     }
 }
