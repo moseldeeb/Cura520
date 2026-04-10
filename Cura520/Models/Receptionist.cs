@@ -1,4 +1,6 @@
-﻿namespace Cura520.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Cura520.Models
 {
     public class Receptionist
     {

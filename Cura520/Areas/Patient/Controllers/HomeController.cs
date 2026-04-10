@@ -1,3 +1,7 @@
+using Cura520.DataAccess;
+using Cura520.Models;
+using Cura520.Repos;
+using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
 namespace Cura520.Areas.Patient.Controllers
@@ -5,15 +9,15 @@ namespace Cura520.Areas.Patient.Controllers
     [Area("Patient")]
     // ? AUTHORIZATION DISABLED FOR TESTING - Uncomment when ready
     // [Authorize]
-    public class HomeController : Controller
+    public class HomeController(ILogger<HomeController> logger,
+                                IRepository<Models.Doctor> doctorRepository,
+                                IRepository<DoctorSchedule> doctorScheduleRepository) : Controller
+
     {
-        private readonly ILogger<HomeController> _logger;
-        private ApplicationDbContext _context;//= new ApplicationDbContext();
-        public HomeController(ApplicationDbContext context, ILogger<HomeController> logger)
-        {
-            _context = context;
-            _logger = logger;
-        }
+        private readonly ILogger<HomeController> _logger = logger;
+        private readonly IRepository<Models.Doctor> _doctorRepository = doctorRepository;
+        private readonly IRepository<DoctorSchedule> _doctorScheduleRepository = doctorScheduleRepository;
+
 
 
 

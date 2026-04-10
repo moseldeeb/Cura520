@@ -1,4 +1,7 @@
-﻿using Cura520.Utilities;
+﻿using Cura520.DataAccess;
+using Cura520.Models;
+using Cura520.Repos;
+using Cura520.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;

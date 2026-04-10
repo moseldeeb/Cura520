@@ -1,12 +1,9 @@
-﻿using AspNetCoreGeneratedDocument;
-using Cura520.Models;
+﻿using Cura520.Models;
 using Cura520.Repos;
 using Cura520.ViewModel.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
-using System.Threading.Tasks;
 
 namespace Cura520.Areas.Identity.Controllers
 {

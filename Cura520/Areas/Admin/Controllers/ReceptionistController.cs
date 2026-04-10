@@ -1,14 +1,9 @@
 ﻿using Cura520.Models;
 using Cura520.Repos;
-using Cura520.Utilities;
-using Cura520.ViewModel.Admin.Doctor;
 using Cura520.ViewModel.Admin.Receptionist;
 using Mapster;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.IO;
 
 namespace Cura520.Areas.Admin.Controllers
 {

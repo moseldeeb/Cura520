@@ -1,4 +1,6 @@
-﻿namespace Cura520.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Cura520.Models
 {
     public class MedicalHistory
     {

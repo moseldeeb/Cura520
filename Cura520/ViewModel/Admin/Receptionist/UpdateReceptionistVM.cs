@@ -1,4 +1,5 @@
 ﻿using Cura520.Validations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Cura520.ViewModel.Admin.Receptionist
 {

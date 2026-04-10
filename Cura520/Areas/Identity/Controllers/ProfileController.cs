@@ -3,9 +3,6 @@ using Cura520.ViewModel.Identity;
 using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using NuGet.Packaging.Signing;
-using System.Threading.Tasks;
 
 namespace Cura520.Areas.Identity.Controllers
 {

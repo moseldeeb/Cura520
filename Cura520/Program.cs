@@ -1,5 +1,3 @@
-using Cura520.DataAccess;
-using Cura520.Models;
 using Cura520.Utilities;
 using Mapster;
 
@@ -74,7 +72,7 @@ namespace Cura520
             // 2. Map for the Main App (Default landing page)
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{area=Admin}/{controller=Doctor}/{action=Home}/{id?}");
+                pattern: "{area=Patient}/{controller=Home}/{action=Index}/{id?}");
 
             app.Run();
         }
