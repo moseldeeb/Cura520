@@ -24,6 +24,7 @@
 	<ItemGroup>
 	  <Folder Include="Areas\Doctor\Controllers\" />
 	  <Folder Include="Areas\Doctor\Views\NewFolder\" />
+	  <Folder Include="Areas\Patient\Views\Doctors\" />
 	  <Folder Include="Areas\Receptionist\Controllers\" />
 	  <Folder Include="wwwroot\css\Doctor\" />
 	  <Folder Include="wwwroot\css\Receptionist\" />

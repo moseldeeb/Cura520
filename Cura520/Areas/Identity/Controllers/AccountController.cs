@@ -1,6 +1,7 @@
 ﻿using Cura520.Models;
 using Cura520.Repos;
 using Cura520.ViewModel.Identity;
+using Mapster;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -14,18 +15,24 @@ namespace Cura520.Areas.Identity.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
         private readonly IRepository<ApplicationUserOTP> _applicationUserOTPRepository;
+        private readonly ILogger<AccountController> _logger;
+        private readonly IRepository<Models.Patient> _patientRepository;
 
         public AccountController(
             UserManager<ApplicationUser> userManager ,
             SignInManager<ApplicationUser> signInManager ,
             IEmailSender emailSender,
-            IRepository<ApplicationUserOTP> applicationUserOTPRepository
+            IRepository<ApplicationUserOTP> applicationUserOTPRepository,
+            ILogger<AccountController> logger,
+            IRepository<Models.Patient> patientRepository
             )
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
             _applicationUserOTPRepository = applicationUserOTPRepository;
+            _logger = logger;
+            _patientRepository = patientRepository;
         }
 
         public IActionResult Index()
@@ -43,40 +50,70 @@ namespace Cura520.Areas.Identity.Controllers
             {
                 return View(registerVM);
             }
-            
-            // Create new ApplicationUser with all required fields
-            ApplicationUser user = new ApplicationUser()
+
+            // Create ApplicationUser with data from RegisterVM
+            var user = new ApplicationUser
             {
                 UserName = registerVM.UserName,
                 Email = registerVM.Email,
                 FirstName = registerVM.FirstName,
                 LastName = registerVM.LastName,
-                Type = UserType.Patient, // Default to Patient on registration
-                EmailConfirmed = false, // Email not confirmed yet
-            };  
-            
-            var result = await _userManager.CreateAsync(user, registerVM.Password); 
+                Address = registerVM.Address,
+                Type = UserType.Patient,
+                EmailConfirmed = false
+            };
+
+            var result = await _userManager.CreateAsync(user, registerVM.Password);
             if (!result.Succeeded)
             {
-                foreach(var error in result.Errors)
+                foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
                 return View(registerVM);
             }
-            
-            // Generate email confirmation token
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var link = Url.Action(nameof(ConfirmEmail), "Account", 
-                new { Area = "Identity", token, userId = user.Id }, Request.Scheme);
-            
-            // Send confirmation email
-            await _emailSender.SendEmailAsync(registerVM.Email, "Cura 520 - Confirm Email",
-                $"<h1>Welcome to Cura 520!</h1>" +
-                $"<p>Please confirm your email by clicking <a href='{link}'>here</a></p>"); 
-            
-            TempData["Success"] = "Registration successful! Please check your email to confirm your account.";
-            return RedirectToAction("Login");
+
+            try
+            {
+                // Assign Patient role
+                await _userManager.AddToRoleAsync(user, "Patient");
+
+                // Create Patient profile with data from RegisterVM
+                var patient = new Models.Patient
+                {
+                    FirstName = registerVM.FirstName,
+                    LastName = registerVM.LastName,
+                    DateOfBirth = registerVM.DateOfBirth,
+                    Gender = registerVM.Gender,
+                    PhoneNumber = registerVM.PhoneNumber,
+                    BloodType = registerVM.BloodType,
+                    Allergies = registerVM.Allergies,
+                    ApplicationUserId = user.Id
+                };
+
+                await _patientRepository.AddAsync(patient);
+                await _patientRepository.CommitAsync();
+
+                // Generate email confirmation token
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                var link = Url.Action(nameof(ConfirmEmail), "Account",
+                    new { Area = "Identity", token, userId = user.Id }, Request.Scheme);
+
+                // Send confirmation email
+                await _emailSender.SendEmailAsync(registerVM.Email, "Cura 520 - Confirm Email",
+                    $"<h1>Welcome to Cura</h1>" +
+                    $"<p>Please confirm your email by clicking <a href='{link}'>here</a></p>");
+
+                TempData["Success"] = "Registration successful! Please check your email to confirm your account.";
+                return RedirectToAction("Login");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error during patient profile creation: {ex.Message}");
+                await _userManager.DeleteAsync(user);
+                ModelState.AddModelError("", "An error occurred while creating your profile. Please try again.");
+                return View(registerVM);
+            }
         }
         
         public async Task<IActionResult> ConfirmEmail(string token, string userId)
@@ -248,19 +285,25 @@ namespace Cura520.Areas.Identity.Controllers
                 await _applicationUserOTPRepository.CommitAsync();
             }
             
-            // Generate new OTP (6-digit for security)
-            var OTP = new Random().Next(100000, 999999).ToString();
-            ApplicationUserOTP applicationUserOTP = new ApplicationUserOTP(OTP, user.Id);
-            
-            await _applicationUserOTPRepository.AddAsync(applicationUserOTP);
-            await _applicationUserOTPRepository.CommitAsync();
-            
-            // Send OTP email
-            await _emailSender.SendEmailAsync(user.Email, "Cura 520 - Password Reset OTP",
-                $"<h1>Password Reset Request</h1>" +
-                $"<p>Your OTP for password reset is: <strong style='font-size: 24px; color: #d4351b;'>{OTP}</strong></p>" +
-                $"<p>This OTP is valid for 10 minutes only.</p>" +
-                $"<p>If you didn't request this, please ignore this email and your password will remain unchanged.</p>");
+            // Generate new OTP (6-digit for security) using cryptographically secure random
+            using (var rng = new System.Security.Cryptography.RNGCryptoServiceProvider())
+            {
+                byte[] tokenData = new byte[4];
+                rng.GetBytes(tokenData);
+                int randomNumber = Math.Abs(BitConverter.ToInt32(tokenData, 0)) % 1000000;
+                var OTP = randomNumber.ToString("D6");
+                ApplicationUserOTP applicationUserOTP = new ApplicationUserOTP(OTP, user.Id);
+                
+                await _applicationUserOTPRepository.AddAsync(applicationUserOTP);
+                await _applicationUserOTPRepository.CommitAsync();
+                
+                // Send OTP email
+                await _emailSender.SendEmailAsync(user.Email, "Cura 520 - Password Reset OTP",
+                    $"<h1>Password Reset Request</h1>" +
+                    $"<p>Your OTP for password reset is: <strong style='font-size: 24px; color: #d4351b;'>{OTP}</strong></p>" +
+                    $"<p>This OTP is valid for 10 minutes only.</p>" +
+                    $"<p>If you didn't request this, please ignore this email and your password will remain unchanged.</p>");
+            }
             
             TempData["Success"] = "OTP has been sent to your email. Please check your inbox.";
             return RedirectToAction("ValidateOTP", new { applicationUserId = user.Id });
@@ -347,7 +390,7 @@ namespace Cura520.Areas.Identity.Controllers
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
-            return RedirectToAction("Index" , "Home" , new { area = "Customer" });
+            return RedirectToAction("Index" , "Home" , new { area = "Patient" });
         }
         [HttpGet]
         public IActionResult AccessDenied(string returnUrl = null)

@@ -6,71 +6,58 @@
     
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-lg">
-                <div class="card-header bg-info text-white">
-                    <h3 class="mb-0">
-                        <i class="fas fa-envelope me-2"></i>Resend Email Confirmation
-                    </h3>
-                </div>
-                <div class="card-body p-4">
-                    <p class="text-muted mb-4">
-                        If you didn't receive a confirmation email, enter your username or email address and we'll send it again.
-                    </p>
+<div class="container-fluid">
+    <div class="row min-vh-100 flex-center g-0">
+        <div class="col-lg-8 col-xxl-5 py-3 position-relative">
+            <img class="bg-auth-circle-shape" src="~/assetsFalcon/img/icons/spot-illustrations/bg-shape.png" alt="" width="250"><img class="bg-auth-circle-shape-2" src="~/assetsFalcon/img/icons/spot-illustrations/shape-1.png" alt="" width="150">
+            <div class="card overflow-hidden z-index-1">
+                <div class="card-body p-0">
+                    <div class="row g-0 h-100">
+                        <div class="col-md-5 text-center bg-card-gradient">
+                            <div class="position-relative p-4 pt-md-5 pb-md-7 light">
+                                <div class="bg-holder bg-auth-card-shape" style="background-image:url(@Url.Content("~/assetsFalcon/img/icons/spot-illustrations/half-circle.png"));">
+                                </div>
+                                <!--/.bg-holder-->
 
-                    <form asp-action="ResendEmailConfirmation" method="post">
-                        <div asp-validation-summary="All" class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            <h6 class="alert-heading">Please fix the following errors:</h6>
+                                <div class="z-index-1 position-relative">
+                                    <a class="link-light mb-4 font-sans-serif fs-4 d-inline-block fw-bolder" asp-action="Login" asp-controller="Account" asp-area="Identity">Cura</a>
+                                    <p class="opacity-75 text-white">With the power of Cura, you can now focus only on your health, while we handle the administrative tasks!</p>
+                                </div>
+                            </div>
+                            <div class="mt-3 mb-4 mt-md-4 mb-md-5 light">
+                                <p class="pt-3 text-white">Already have an account?<br><a class="btn btn-outline-light mt-2 px-4" asp-action="Login" asp-controller="Account" asp-area="Identity"><i class="fas fa-sign-in-alt me-1"></i>Log In</a></p>
+                            </div>
+                            <div class="mt-3 mb-4 mt-md-4 mb-md-5 light">
+                                <p class="pt-3 text-white">Don't have an account yet?<br><a class="btn btn-outline-light mt-2 px-4" asp-action="Register" asp-controller="Account" asp-area="Identity"><i class="fas fa-user-plus me-1"></i>Create Account</a></p>
+                            </div>
                         </div>
-
-                        <div class="form-group mb-3">
-                            <label asp-for="UserNameOrEmail" class="form-label fw-bold">
-                                <i class="fas fa-user me-2"></i>Username or Email
-                            </label>
-                            <input asp-for="UserNameOrEmail" class="form-control form-control-lg" 
-                                   placeholder="Enter your username or email address" 
-                                   autocomplete="email" />
-                            <span asp-validation-for="UserNameOrEmail" class="invalid-feedback d-block"></span>
+                        <div class="col-md-7 d-flex flex-center">
+                            <div class="p-4 p-md-5 flex-grow-1">
+                                <div class="text-center text-md-start">
+                                    <h4 class="mb-0">Resend Email Confirmation</h4>
+                                    <p class="mb-4">If you didn't receive a confirmation email, enter your username or email address and we'll send it again.</p>
+                                </div>
+                                <div class="row justify-content-center">
+                                    <div class="col-sm-8 col-md">
+                                        <form class="mb-3" asp-action="ResendEmailConfirmation" asp-controller="Account" asp-area="Identity" method="post">
+                                            <div asp-validation-summary="All" class="alert alert-danger alert-dismissible fade show" role="alert">
+                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                                <h6 class="alert-heading">Please fix the following errors:</h6>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label" asp-for="UserNameOrEmail">Email or Username</label>
+                                                <input class="form-control" asp-for="UserNameOrEmail" type="text" placeholder="Email address or User Name" />
+                                                <span asp-validation-for="UserNameOrEmail" class="text-danger"></span>
+                                            </div>
+                                            <button class="btn btn-primary d-block w-100 mt-3" type="submit" name="submit"><i class="fas fa-paper-plane me-2"></i>Send Confirmation Email</button>
+                                        </form>
+                                        <a class="fs--1 text-600" asp-action="ForgetPassword" asp-controller="Account" asp-area="Identity">Forgot your password?<span class="d-inline-block ms-1">&rarr;</span></a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-info btn-lg fw-bold text-white">
-                                <i class="fas fa-paper-plane me-2"></i>Send Confirmation Email
-                            </button>
-                        </div>
-                    </form>
-
-                    <hr class="my-4" />
-
-                    <div class="text-center">
-                        <p class="mb-2">Already confirmed your email?</p>
-                        <a asp-action="Login" class="btn btn-link">
-                            <i class="fas fa-sign-in-alt me-1"></i>Go to Login
-                        </a>
                     </div>
-
-                    <div class="text-center mt-3">
-                        <p class="mb-2">Don't have an account yet?</p>
-                        <a asp-action="Register" class="btn btn-link">
-                            <i class="fas fa-user-plus me-1"></i>Create Account
-                        </a>
-                    </div>
                 </div>
-            </div>
-
-            <div class="alert alert-success mt-3">
-                <h6 class="alert-heading">
-                    <i class="fas fa-check-circle me-2"></i>Tips
-                </h6>
-                <ul class="mb-0 small">
-                    <li>Check your spam or junk folder if you don't see the email</li>
-                    <li>You can use either your username or email address</li>
-                    <li>Confirmation links expire after 24 hours</li>
-                    <li>Once confirmed, you'll be able to login to your account</li>
-                </ul>
             </div>
         </div>
     </div>

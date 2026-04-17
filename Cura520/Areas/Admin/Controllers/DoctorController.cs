@@ -13,11 +13,11 @@ namespace Cura520.Areas.Admin.Controllers
     // [Authorize(Roles = $"{SD.Role_SuperAdmin},{SD.Role_Admin},{SD.Role_Manager}")]
     public class DoctorController(
         UserManager<ApplicationUser> userManager,
-        IRepository<Doctor> doctorRepository,
+        IRepository<Models.Doctor> doctorRepository,
         IRepository<DoctorSchedule> doctorScheduleRepository) : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager = userManager;
-        private readonly IRepository<Doctor> _doctorRepository = doctorRepository;
+        private readonly IRepository<Models.Doctor> _doctorRepository = doctorRepository;
         private readonly IRepository<DoctorSchedule> _doctorScheduleRepository = doctorScheduleRepository;
 
         public async Task<IActionResult> Home()

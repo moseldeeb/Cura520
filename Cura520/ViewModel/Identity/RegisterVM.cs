@@ -23,7 +23,7 @@ namespace Cura520.ViewModel.Identity
         public string Email { get; set; }
         
         [Required(ErrorMessage = "Password is required")]
-        [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters long")]
+        [StringLength(100, MinimumLength = 8, ErrorMessage = "Password must be at least 8 characters long")]
         [DataType(DataType.Password)]
         public string Password { get; set; }
         
@@ -31,5 +31,29 @@ namespace Cura520.ViewModel.Identity
         [DataType(DataType.Password)]
         [Compare(nameof(Password), ErrorMessage = "Passwords do not match")]
         public string ConfirmPassword { get; set; }
+
+        [Required(ErrorMessage = "Date of birth is required")]
+        [DataType(DataType.Date)]
+        [Display(Name = "Date of Birth")]
+        public DateTime DateOfBirth { get; set; }
+
+        [Required(ErrorMessage = "Gender is required")]
+        [StringLength(10, ErrorMessage = "Gender must be 10 characters or less")]
+        public string Gender { get; set; }
+
+        [Phone(ErrorMessage = "Invalid phone number")]
+        [Required(ErrorMessage = "Phone number is required")]
+        [StringLength(20, ErrorMessage = "Phone number must be 20 characters or less")]
+        public string PhoneNumber { get; set; }
+
+        [StringLength(10, ErrorMessage = "Blood type must be 10 characters or less")]
+        [Display(Name = "Blood Type")]
+        public string BloodType { get; set; } = string.Empty;
+
+        [StringLength(250, ErrorMessage = "Allergies must be 250 characters or less")]
+        public string Allergies { get; set; } = string.Empty;
+
+        [StringLength(150, ErrorMessage = "Address must be 150 characters or less")]
+        public string Address { get; set; } = string.Empty;
     }
 }
