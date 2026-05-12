@@ -79,7 +79,12 @@
                                 <div class="card bg-light">
                                     <div class="card-body">
                                         <h6>Doctor Details</h6>
+                                        <input type="hidden" asp-for="DoctorId">
+                                        <input type="hidden" asp-for="DoctorName">
+                                        <input type="hidden" asp-for="DoctorSpecialty">
+                                        <input type="hidden" asp-for="ConsultationFee">
                                         <p class="mb-1"><strong>Specialty:</strong> <span id="doctorSpecialty"></span></p>
+
                                         <p class="mb-0"><strong>Consultation Fee:</strong> $<span id="consultationFee">0.00</span></p>
                                     </div>
                                 </div>
@@ -103,7 +108,7 @@
 
                             <!-- Hidden Fields -->
                             <input type="hidden" asp-for="PatientId">
-                            <input type="hidden" asp-for="Id">
+                          
 
                             <!-- Form Actions -->
                             <div class="row mt-4">

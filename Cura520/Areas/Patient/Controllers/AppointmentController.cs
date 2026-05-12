@@ -54,7 +54,7 @@ namespace Cura520.Areas.Patient.Controllers
             }
         }
 
-        
+        [HttpGet]
         public async Task<IActionResult> Create()
         {
             try
@@ -127,6 +127,7 @@ namespace Cura520.Areas.Patient.Controllers
                     AppointmentDate = appointmentVM.AppointmentDate,
                     PatientId = currentPatient.Id,
                     DoctorId = appointmentVM.DoctorId,
+                    Doctor = doctor,
                     Status = Status.Pending,
                     CreatedAt = DateTime.Now,
                     UpdatedAt = DateTime.Now,

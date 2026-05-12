@@ -4,8 +4,6 @@ namespace Cura520.ViewModel.Patient
 {
     public class CreateAppointmentVM
     {
-        public int Id { get; set; }
-
         [Required(ErrorMessage = "Symptom summary is required")]
         [StringLength(1000, MinimumLength = 10, ErrorMessage = "Symptom summary must be between 10 and 1000 characters")]
         [Display(Name = "Describe Your Symptoms")]
