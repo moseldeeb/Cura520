@@ -1,7 +1,10 @@
 ﻿using Cura520.Models;
+using Cura520.Models;
 using Cura520.Repos;
+using Cura520.Utilities;
 using Cura520.ViewModel.Identity;
 using Mapster;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -35,60 +38,68 @@ namespace Cura520.Areas.Identity.Controllers
             _patientRepository = patientRepository;
         }
 
-        public IActionResult Index()
-        {
-            return View();
-        }
         public IActionResult Register() 
         {
-            return View();
+            return View(new SimpleRegisterVM());
         }
+
         [HttpPost]
-        public async Task<IActionResult> Register(RegisterVM registerVM)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(SimpleRegisterVM registerVM)
         {
             if (!ModelState.IsValid)
             {
                 return View(registerVM);
             }
 
-            // Create ApplicationUser with data from RegisterVM
-            var user = new ApplicationUser
-            {
-                UserName = registerVM.UserName,
-                Email = registerVM.Email,
-                FirstName = registerVM.FirstName,
-                LastName = registerVM.LastName,
-                Address = registerVM.Address,
-                Type = UserType.Patient,
-                EmailConfirmed = false
-            };
-
-            var result = await _userManager.CreateAsync(user, registerVM.Password);
-            if (!result.Succeeded)
-            {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
-                return View(registerVM);
-            }
-
             try
             {
-                // Assign Patient role
-                await _userManager.AddToRoleAsync(user, "Patient");
+                // Auto-generate username from email (first part before @)
+                var username = registerVM.Email.Split('@')[0];
+                
+                // Check if username already exists
+                var existingUser = await _userManager.FindByEmailAsync(registerVM.Email);
+                if (existingUser != null)
+                {
+                    ModelState.AddModelError("Email", "This email is already registered. Please use a different email.");
+                    return View(registerVM);
+                }
 
-                // Create Patient profile with data from RegisterVM
+                // Create ApplicationUser with minimal required info
+                var user = new ApplicationUser
+                {
+                    UserName = username,
+                    Email = registerVM.Email,
+                    FirstName = registerVM.FirstName,
+                    LastName = registerVM.LastName,
+                    Type = UserType.Patient,
+                    EmailConfirmed = false
+                };
+
+                var result = await _userManager.CreateAsync(user, registerVM.Password);
+                if (!result.Succeeded)
+                {
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                    return View(registerVM);
+                }
+
+                // Assign Patient role
+                await _userManager.AddToRoleAsync(user, SD.Role_Patient);
+
+                // Create minimal Patient profile (only required fields + user reference)
                 var patient = new Models.Patient
                 {
                     FirstName = registerVM.FirstName,
                     LastName = registerVM.LastName,
-                    DateOfBirth = registerVM.DateOfBirth,
-                    Gender = registerVM.Gender,
-                    PhoneNumber = registerVM.PhoneNumber,
-                    BloodType = registerVM.BloodType,
-                    Allergies = registerVM.Allergies,
-                    ApplicationUserId = user.Id
+                    ApplicationUserId = user.Id,
+                    // Other fields left empty for later profile completion
+                    Gender = string.Empty,
+                    PhoneNumber = string.Empty,
+                    BloodType = string.Empty,
+                    Allergies = string.Empty
                 };
 
                 await _patientRepository.AddAsync(patient);
@@ -101,7 +112,7 @@ namespace Cura520.Areas.Identity.Controllers
 
                 // Send confirmation email
                 await _emailSender.SendEmailAsync(registerVM.Email, "Cura 520 - Confirm Email",
-                    $"<h1>Welcome to Cura</h1>" +
+                    $"<h1>Welcome to Cura!</h1>" +
                     $"<p>Please confirm your email by clicking <a href='{link}'>here</a></p>");
 
                 TempData["Success"] = "Registration successful! Please check your email to confirm your account.";
@@ -109,9 +120,8 @@ namespace Cura520.Areas.Identity.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error during patient profile creation: {ex.Message}");
-                await _userManager.DeleteAsync(user);
-                ModelState.AddModelError("", "An error occurred while creating your profile. Please try again.");
+                _logger.LogError($"Error during registration: {ex.Message}");
+                ModelState.AddModelError("", "An error occurred during registration. Please try again.");
                 return View(registerVM);
             }
         }
@@ -185,7 +195,34 @@ namespace Cura520.Areas.Identity.Controllers
                     return View(loginVm);
                 }
             }
-            return RedirectToAction("Index" , "Home" , new { area = "Customer" });
+            // Redirect based on user role
+            if (await _userManager.IsInRoleAsync(user, SD.Role_SuperAdmin))
+            {
+                return RedirectToAction("Index", "Home", new { area = "Admin" });
+            }
+            else if (await _userManager.IsInRoleAsync(user, SD.Role_Admin))
+            {
+                return RedirectToAction("Index", "Home", new { area = "Admin" });
+            }
+            else if (await _userManager.IsInRoleAsync(user, SD.Role_Doctor))
+            {
+                return RedirectToAction("Index", "Home", new { area = "Doctor" });
+            }
+            else if (await _userManager.IsInRoleAsync(user, SD.Role_Patient))
+            {
+                // For patients, check if profile is complete
+                // First-time patients go to profile completion page
+                return RedirectToAction("CompleteProfile", "Account", new { area = "Identity" });
+            }
+            else if (await _userManager.IsInRoleAsync(user, SD.Role_Receptionist))
+            {
+                return RedirectToAction("Index", "Home", new { area = "Receptionist" });
+            }
+            else
+            {
+                // Default to Patient area if no role is assigned
+                return RedirectToAction("CompleteProfile", "Account", new { area = "Identity" });
+            }
         }
         public IActionResult ResendEmailConfirmation()
         {
@@ -397,6 +434,155 @@ namespace Cura520.Areas.Identity.Controllers
         {
             ViewBag.ReturnUrl = returnUrl;
             return View();
+        }
+
+        /// <summary>
+        /// GET: Patient profile completion page (called after first login)
+        /// </summary>
+        [Authorize(Roles = "Patient")]
+        [HttpGet]
+        public async Task<IActionResult> CompleteProfile()
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                {
+                    return RedirectToAction("Login");
+                }
+
+                var patient = await _patientRepository.GetOneAsync(p => p.ApplicationUserId == user.Id && !p.IsDeleted);
+                if (patient == null)
+                {
+                    return RedirectToAction("Logout");
+                }
+
+                var profileVM = new PatientProfileVM
+                {
+                    PatientId = patient.Id,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Email = user.Email,
+                    DateOfBirth = patient.DateOfBirth != DateTime.MinValue ? patient.DateOfBirth : null,
+                    Gender = patient.Gender,
+                    PhoneNumber = patient.PhoneNumber,
+                    BloodType = patient.BloodType,
+                    Allergies = patient.Allergies,
+                    Address = user.Address,
+                    ProfilePhotoUrl = patient.Img,
+                    IsProfileComplete = !string.IsNullOrEmpty(patient.PhoneNumber) && patient.DateOfBirth != DateTime.MinValue
+                };
+
+                return View(profileVM);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error loading profile completion page: {ex.Message}");
+                TempData["Error"] = "An error occurred. Please try again.";
+                return RedirectToAction("Index", "Home", new { area = "Patient" });
+            }
+        }
+
+        /// <summary>
+        /// POST: Update patient profile information
+        /// </summary>
+        [Authorize(Roles = "Patient")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CompleteProfile(PatientProfileVM profileVM)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                {
+                    return RedirectToAction("Login");
+                }
+
+                var patient = await _patientRepository.GetOneAsync(p => p.ApplicationUserId == user.Id && !p.IsDeleted);
+                if (patient == null)
+                {
+                    return RedirectToAction("Logout");
+                }
+
+                // Update patient profile with form data
+                patient.DateOfBirth = profileVM.DateOfBirth ?? DateTime.MinValue;
+                patient.Gender = profileVM.Gender ?? string.Empty;
+                patient.PhoneNumber = profileVM.PhoneNumber ?? string.Empty;
+                patient.BloodType = profileVM.BloodType ?? string.Empty;
+                patient.Allergies = profileVM.Allergies ?? string.Empty;
+
+                // Update address in ApplicationUser
+                user.Address = profileVM.Address ?? string.Empty;
+
+                // Handle profile photo upload
+                if (profileVM.ProfilePhoto != null && profileVM.ProfilePhoto.Length > 0)
+                {
+                    try
+                    {
+                        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(profileVM.ProfilePhoto.FileName);
+                        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images", "Patients", fileName);
+
+                        var directory = Path.GetDirectoryName(filePath);
+                        if (!Directory.Exists(directory))
+                        {
+                            Directory.CreateDirectory(directory);
+                        }
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await profileVM.ProfilePhoto.CopyToAsync(stream);
+                        }
+
+                        patient.Img = fileName;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError($"Error uploading profile photo: {ex.Message}");
+                        ModelState.AddModelError("ProfilePhoto", "Error uploading profile photo. Please try again.");
+                        return View(profileVM);
+                    }
+                }
+
+                // Update patient record
+                _patientRepository.Update(patient);
+                await _patientRepository.CommitAsync();
+
+                // Update user record
+                var userUpdateResult = await _userManager.UpdateAsync(user);
+                if (!userUpdateResult.Succeeded)
+                {
+                    ModelState.AddModelError("", "Error updating user information.");
+                    return View(profileVM);
+                }
+
+                TempData["Success"] = "Profile completed successfully! You can now access all features.";
+                return RedirectToAction("Index", "Home", new { area = "Patient" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error updating profile: {ex.Message}");
+                ModelState.AddModelError("", "An error occurred while updating your profile. Please try again.");
+                return View(profileVM);
+            }
+        }
+
+        /// <summary>
+        /// AJAX: Skip profile completion and go to dashboard
+        /// </summary>
+        [Authorize(Roles = "Patient")]
+        [HttpPost]
+        public async Task<IActionResult> SkipProfileCompletion()
+        {
+            try
+            {
+                // Just redirect to patient home - user can complete profile later
+                return RedirectToAction("Index", "Home", new { area = "Patient" });
+            }
+            catch
+            {
+                return RedirectToAction("Index", "Home", new { area = "Patient" });
+            }
         }
 
 

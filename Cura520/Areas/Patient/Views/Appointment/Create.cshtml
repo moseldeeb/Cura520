@@ -1,0 +1,167 @@
+@using Cura520.ViewModel.Patient
+@model CreateAppointmentVM
+
+@{
+    ViewData["Title"] = "Request Appointment";
+}
+
+<!-- Create Appointment Section -->
+<section id="create-appointment" class="appointment section">
+
+    <!-- Section Title -->
+    <div class="container section-title" data-aos="fade-up">
+        <h2>Request Appointment</h2>
+        <p>Book an appointment with one of our doctors</p>
+    </div><!-- End Section Title -->
+
+    <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">New Appointment Request</h5>
+                    </div>
+                    <div class="card-body p-4">
+
+                        <!-- Validation Summary -->
+                        @if (!ViewData.ModelState.IsValid)
+                        {
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <h6 class="alert-heading">Please fix the following errors:</h6>
+                                <ul class="mb-0">
+                                    @foreach (var modelState in ViewData.ModelState.Values)
+                                    {
+                                        @foreach (var error in modelState.Errors)
+                                        {
+                                            <li>@error.ErrorMessage</li>
+                                        }
+                                    }
+                                </ul>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        }
+
+                        <form method="post" asp-action="Create" asp-controller="Appointment" asp-area="Patient">
+
+                            <!-- Patient Info (Read-only) -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="PatientName" class="form-label fw-bold">Your Name</label>
+                                    <input type="text" class="form-control" asp-for="PatientName" readonly>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="Status" class="form-label fw-bold">Status</label>
+                                    <input type="text" class="form-control" asp-for="Status" readonly value="Pending">
+                                </div>
+                            </div>
+
+                            <!-- Doctor Selection -->
+                            <div class="mb-3">
+                                <label asp-for="DoctorId" class="form-label fw-bold">Select Doctor <span class="text-danger">*</span></label>
+                                <select class="form-select" asp-for="DoctorId" id="doctorSelect">
+                                    <option value="">-- Choose a Doctor --</option>
+                                    @if (ViewBag.Doctors != null)
+                                    {
+                                        @foreach (var doctor in ViewBag.Doctors)
+                                        {
+                                            <option value="@doctor.Id">
+                                                Dr. @doctor.FirstName @doctor.LastName - @doctor.Specialty
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                                <span class="text-danger" asp-validation-for="DoctorId"></span>
+                            </div>
+
+                            <!-- Doctor Info Display -->
+                            <div class="mb-3" id="doctorInfo" style="display: none;">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6>Doctor Details</h6>
+                                        <p class="mb-1"><strong>Specialty:</strong> <span id="doctorSpecialty"></span></p>
+                                        <p class="mb-0"><strong>Consultation Fee:</strong> $<span id="consultationFee">0.00</span></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Appointment Date -->
+                            <div class="mb-3">
+                                <label asp-for="AppointmentDate" class="form-label fw-bold">Preferred Appointment Date & Time <span class="text-danger">*</span></label>
+                                <input type="datetime-local" class="form-control" asp-for="AppointmentDate" min="">
+                                <small class="text-muted">Please select a date and time in the future</small>
+                                <span class="text-danger" asp-validation-for="AppointmentDate"></span>
+                            </div>
+
+                            <!-- Symptom Summary -->
+                            <div class="mb-3">
+                                <label asp-for="SymptomSummary" class="form-label fw-bold">Describe Your Symptoms <span class="text-danger">*</span></label>
+                                <textarea class="form-control" asp-for="SymptomSummary" rows="5" placeholder="Please describe your symptoms in detail (minimum 10 characters)"></textarea>
+                                <small class="text-muted">This helps the doctor prepare for your appointment</small>
+                                <span class="text-danger" asp-validation-for="SymptomSummary"></span>
+                            </div>
+
+                            <!-- Hidden Fields -->
+                            <input type="hidden" asp-for="PatientId">
+                            <input type="hidden" asp-for="Id">
+
+                            <!-- Form Actions -->
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <a asp-action="Index" asp-controller="Appointment" asp-area="Patient" class="btn btn-secondary w-100">
+                                        <i class="bi bi-arrow-left me-2"></i> Cancel
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="bi bi-calendar-check me-2"></i> Request Appointment
+                                    </button>
+                                </div>
+                            </div>
+
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</section><!-- /Create Appointment Section -->
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set minimum datetime to now
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('AppointmentDate').min = now.toISOString().slice(0, 16);
+
+            // Handle doctor selection
+            const doctorSelect = document.getElementById('doctorSelect');
+            const doctorInfo = document.getElementById('doctorInfo');
+
+            doctorSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                if (this.value) {
+                    // Fetch doctor details via AJAX
+                    fetch(`/Patient/Appointment/GetAvailableDoctors`)
+                        .then(response => response.json())
+                        .then(doctors => {
+                            const doctor = doctors.find(d => d.id == this.value);
+                            if (doctor) {
+                                document.getElementById('doctorSpecialty').textContent = doctor.specialty;
+                                document.getElementById('consultationFee').textContent = doctor.consultationFee.toFixed(2);
+                                doctorInfo.style.display = 'block';
+                            }
+                        });
+                } else {
+                    doctorInfo.style.display = 'none';
+                }
+            });
+        });
+    </script>
+}

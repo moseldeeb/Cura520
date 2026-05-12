@@ -52,24 +52,48 @@ namespace Cura520.Utilities
                 }
             }
 
-            if (!_roleManager.RoleExistsAsync(SD.Role_SuperAdmin).GetAwaiter().GetResult())
+            // Create SuperAdmin user if it doesn't already exist
+            if (!_db.Users.Any(u => u.UserName == "CuraAdmin"))
             {
-                var adminUser = new ApplicationUser
+                try
                 {
-                    UserName = "CuraAdmin",
-                    Email = "admin@cura.com",
-                    FirstName = "Cura",
-                    LastName = "Admin",
-                    PhoneNumber = "01090670584",
-                    Address = "Egypt, Cairo",
-                    EmailConfirmed = true,
-                    Type = UserType.Admin
-                };
-                var result = _userManager.CreateAsync(adminUser, "Admin123*").GetAwaiter().GetResult();
+                    var adminUser = new ApplicationUser
+                    {
+                        UserName = "CuraAdmin",
+                        Email = "admin@cura.com",
+                        FirstName = "Cura",
+                        LastName = "Admin",
+                        PhoneNumber = "01090670584",
+                        Address = "Egypt, Cairo",
+                        EmailConfirmed = true,
+                        Type = UserType.SuperAdmin
+                    };
+                    var result = _userManager.CreateAsync(adminUser, "Admin123*").GetAwaiter().GetResult();
 
-                if (result.Succeeded)
+                    if (result.Succeeded)
+                    {
+                        var roleResult = _userManager.AddToRoleAsync(adminUser, SD.Role_SuperAdmin).GetAwaiter().GetResult();
+                        if (!roleResult.Succeeded)
+                        {
+                            Console.WriteLine("Error assigning SuperAdmin role:");
+                            foreach (var error in roleResult.Errors)
+                            {
+                                Console.WriteLine($"- {error.Code}: {error.Description}");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Error creating SuperAdmin user:");
+                        foreach (var error in result.Errors)
+                        {
+                            Console.WriteLine($"- {error.Code}: {error.Description}");
+                        }
+                    }
+                }
+                catch (Exception ex)
                 {
-                    _userManager.AddToRoleAsync(adminUser, SD.Role_SuperAdmin).GetAwaiter().GetResult();
+                    Console.WriteLine($"Exception creating SuperAdmin: {ex.Message}");
                 }
             }
 
@@ -86,33 +110,56 @@ namespace Cura520.Utilities
                 _db.SaveChanges();
             }
 
-            // 5. Create a default Receptionist Profile (Optional but helpful for testing)
-            // Link a user to the Receptionist table so the Area works right away
-            if (!_db.Receptionists.Any())
+            // Create test Receptionist user if doesn't already exist
+            if (!_db.Users.Any(u => u.UserName == "CuraStaff"))
             {
-                var receptionistUser = new ApplicationUser
+                try
                 {
-                    UserName = "CuraStaff",
-                    Email = "reception@cura.com",
-                    FirstName = "Main",
-                    LastName = "Reception",
-                    EmailConfirmed = true,
-                    Type = UserType.Receptionist
-                };
-
-                var result = _userManager.CreateAsync(receptionistUser, "Staff123*").GetAwaiter().GetResult();
-                if (result.Succeeded)
-                {
-                    _userManager.AddToRoleAsync(receptionistUser, SD.Role_Receptionist).GetAwaiter().GetResult();
-
-                    _db.Receptionists.Add(new Receptionist
+                    var receptionistUser = new ApplicationUser
                     {
+                        UserName = "CuraStaff",
+                        Email = "reception@cura.com",
                         FirstName = "Main",
                         LastName = "Reception",
-                        ApplicationUserId = receptionistUser.Id
-                    });
+                        EmailConfirmed = true,
+                        Type = UserType.Receptionist
+                    };
 
-                    _db.SaveChanges();
+                    var result = _userManager.CreateAsync(receptionistUser, "Staff123*").GetAwaiter().GetResult();
+                    if (result.Succeeded)
+                    {
+                        var roleResult = _userManager.AddToRoleAsync(receptionistUser, SD.Role_Receptionist).GetAwaiter().GetResult();
+                        if (!roleResult.Succeeded)
+                        {
+                            Console.WriteLine("Error assigning Receptionist role:");
+                            foreach (var error in roleResult.Errors)
+                            {
+                                Console.WriteLine($"- {error.Code}: {error.Description}");
+                            }
+                        }
+
+                        // Create receptionist profile
+                        _db.Receptionists.Add(new Receptionist
+                        {
+                            FirstName = "Main",
+                            LastName = "Reception",
+                            ApplicationUserId = receptionistUser.Id
+                        });
+
+                        _db.SaveChanges();
+                    }
+                    else
+                    {
+                        Console.WriteLine("Error creating Receptionist user:");
+                        foreach (var error in result.Errors)
+                        {
+                            Console.WriteLine($"- {error.Code}: {error.Description}");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Exception creating Receptionist: {ex.Message}");
                 }
             }
 

@@ -20,13 +20,16 @@
                                 <!--/.bg-holder-->
 
                                 <div class="z-index-1 position-relative">
-                                    <a class="link-light mb-4 font-sans-serif fs-4 d-inline-block fw-bolder" href="@Url.Action("Index", "Home", new { area = "" })">falcon</a>
-                                    <p class="opacity-75 text-white">With the power of Falcon, you can now focus only on functionaries for your digital products, while leaving the UI design on us!</p>
+                                    <a class="link-light mb-4 d-inline-block" href="@Url.Action("Index", "Home", new { area = "" })">
+                                    <h2 class="text-white fw-bolder mb-3">Cura</h2>
+                                    </a>
+                                    <p class="opacity-75 text-white">Your Care is Our Care. Access your healthcare management system securely.</p>
                                 </div>
                             </div>
                             <div class="mt-3 mb-4 mt-md-4 mb-md-5 light">
                                 <p class="text-white">Don't have an account?<br><a class="text-decoration-underline link-light" asp-action="Register" asp-controller="Account" asp-area="Identity">Get started!</a></p>
-                                <p class="mb-0 mt-4 mt-md-5 fs--1 fw-semi-bold text-white opacity-75">Read our <a class="text-decoration-underline text-white" href="#!">terms</a> and <a class="text-decoration-underline text-white" href="#!">conditions </a></p>
+                                <p class="text-white">Didn't receive confirmation email?<br><a class="text-decoration-underline link-light" asp-action="ResendEmailConfirmation" asp-controller="Account" asp-area="Identity">Resend email</a></p>
+                                <p class="mb-0 mt-4 mt-md-5 fs--1 fw-semi-bold text-white opacity-75">© 2024 Cura. All rights reserved.</p>
                             </div>
                         </div>
                         <div class="col-md-7 d-flex flex-center">
@@ -43,7 +46,7 @@
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label" asp-for="UserNameOrEmail">Email address or User Name</label>
-                                        <input class="form-control" asp-for="UserNameOrEmail" id="card-email" type="email" />
+                                        <input class="form-control" asp-for="UserNameOrEmail" id="card-email" type="text"  />
                                     </div>
                                     <div class="mb-3">
                                         <div class="d-flex justify-content-between">
@@ -56,6 +59,10 @@
                                             <div class="form-check mb-0">
                                                 <input class="form-check-input" type="checkbox" asp-for="RememberMe" id="card-checkbox" checked="checked" />
                                                 <label class="form-check-label mb-0" asp-for="RememberMe">Remember me</label>
+                                            </div>
+                                            <div class="form-check mb-0">
+                                                <input class="form-check-input" type="checkbox" id="show-password-checkbox"/>
+                                                <label class="form-check-label mb-0" for="show-password-checkbox">Show Password</label>
                                             </div>
                                         </div>
                                         <div class="col-auto"><a class="fs--1" asp-action="ForgetPassword" asp-controller="Account" asp-area="Identity">Forgot Password?</a></div>
@@ -84,4 +91,16 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <partial name="_NotificationPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const passwordInput = document.getElementById('card-password');
+            const showPasswordCheckbox = document.getElementById('show-password-checkbox');
+
+            showPasswordCheckbox.addEventListener('change', function () {
+                // If checked, type is text; otherwise, it's password
+                passwordInput.type = this.checked ? 'text' : 'password';
+            });
+        });
+    </script>
 }

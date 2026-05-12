@@ -1,0 +1,194 @@
+@using Cura520.Models
+@model Appointment
+
+@{
+    ViewData["Title"] = "Appointment Details";
+}
+
+<!-- Appointment Details Section -->
+<section id="appointment-details" class="appointment section">
+
+    <!-- Section Title -->
+    <div class="container section-title" data-aos="fade-up">
+        <h2>Appointment Details</h2>
+        <p>View your appointment information</p>
+    </div><!-- End Section Title -->
+
+    <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <!-- Success/Error Messages -->
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <strong>Success!</strong> @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong>Error!</strong> @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                
+                <!-- Appointment Card -->
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Appointment #@Model.Id</h5>
+                    </div>
+                    <div class="card-body">
+
+                        <!-- Status Badge -->
+                        <div class="mb-4">
+                            <strong>Status:</strong>
+                            @switch (Model.Status)
+                            {
+                                case Status.Pending:
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                    break;
+                                case Status.Confirmed:
+                                    <span class="badge bg-success">Confirmed</span>
+                                    break;
+                                case Status.Completed:
+                                    <span class="badge bg-info">Completed</span>
+                                    break;
+                                case Status.Cancelled:
+                                    <span class="badge bg-danger">Cancelled</span>
+                                    break;
+                            }
+                        </div>
+
+                        <!-- Appointment Information -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Appointment Date & Time</h6>
+                                <p class="text-muted">
+                                    <i class="bi bi-calendar-event me-2"></i>
+                                    @Model.AppointmentDate.ToString("dddd, MMMM dd, yyyy")
+                                </p>
+                                <p class="text-muted">
+                                    <i class="bi bi-clock me-2"></i>
+                                    @Model.AppointmentDate.ToString("hh:mm tt")
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Created On</h6>
+                                <p class="text-muted">
+                                    <i class="bi bi-calendar-check me-2"></i>
+                                    @Model.CreatedAt.ToString("MMMM dd, yyyy hh:mm tt")
+                                </p>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <!-- Doctor Information -->
+                        <div class="mb-4">
+                            <h6 class="mb-3">Doctor Information</h6>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-auto">
+                                            @if (!string.IsNullOrEmpty(Model.Doctor.Img) && Model.Doctor.Img != "defaultImg.png")
+                                            {
+                                                <img src="@Model.Doctor.Img" alt="@Model.Doctor.FirstName" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+                                            }
+                                            else
+                                            {
+                                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                                    <i class="bi bi-person text-white" style="font-size: 2rem;"></i>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="col">
+                                            <h6 class="mb-1">Dr. @Model.Doctor.FirstName @Model.Doctor.LastName</h6>
+                                            <p class="mb-1 text-muted">@Model.Doctor.Specialty</p>
+                                            <p class="mb-0">
+                                                <i class="bi bi-telephone me-2"></i>
+                                                @Model.Doctor.PhoneNumber
+                                            </p>
+                                        </div>
+                                        <div class="col-md-3 text-end">
+                                            <h6>Consultation Fee</h6>
+                                            <h5 class="text-primary">${{ Model.Doctor.ConsultationFee:F2 }}</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <!-- Patient Information -->
+                        <div class="mb-4">
+                            <h6 class="mb-3">Your Information</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p>
+                                        <strong>Name:</strong><br />
+                                        @Model.Patient.FirstName @Model.Patient.LastName
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p>
+                                        <strong>Phone:</strong><br />
+                                        @Model.Patient.PhoneNumber
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <!-- Symptoms -->
+                        <div class="mb-4">
+                            <h6 class="mb-3">Symptoms / Reason for Visit</h6>
+                            <div class="alert alert-info">
+                                <p class="mb-0">@Model.SymptomSummary</p>
+                            </div>
+                        </div>
+
+                        <!-- Timeline -->
+                        <hr />
+                        <div class="mb-4">
+                            <h6 class="mb-3">Timeline</h6>
+                            <small class="text-muted">
+                                Created: @Model.CreatedAt.ToString("MMMM dd, yyyy hh:mm tt")
+                                <br />
+                                Last Updated: @Model.UpdatedAt.ToString("MMMM dd, yyyy hh:mm tt")
+                            </small>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <a asp-action="Index" asp-controller="Appointment" asp-area="Patient" class="btn btn-secondary w-100">
+                            <i class="bi bi-arrow-left me-2"></i> Back to Appointments
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        @if (Model.Status != Status.Completed && Model.Status != Status.Cancelled)
+                        {
+                            <form method="post" asp-action="Cancel" asp-route-id="@Model.Id" class="w-100">
+                                <button type="submit" class="btn btn-danger w-100" onclick="return confirm('Are you sure you want to cancel this appointment?');">
+                                    <i class="bi bi-x-circle me-2"></i> Cancel Appointment
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</section><!-- /Appointment Details Section -->

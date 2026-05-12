@@ -1,6 +1,8 @@
 using Cura520.Models;
 using Cura520.Repos;
+using Cura520.Utilities;
 using Cura520.ViewModel.Admin;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,7 +10,7 @@ namespace Cura520.Areas.Admin.Controllers
 {
     [Area("Admin")]
     
-    // [Authorize(Roles = $"{SD.Role_SuperAdmin},{SD.Role_Admin},{SD.Role_Manager}")]
+     [Authorize(Roles = $"{SD.Role_SuperAdmin},{SD.Role_Admin}")]
     public class HomeController(UserManager<ApplicationUser> userManager, 
                                 IRepository<Models.Doctor> doctorRepository,
                                 IRepository<Models.Patient> patientRepository,
@@ -21,21 +23,30 @@ namespace Cura520.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var doctors = await _doctorRepository.GetAsync();
-            var patients = await _patientRepository.GetAsync();
-            var appointments = await _appointmentRepository.GetAsync();
-
-            var dashboardVM = new DashboardVM
+            try
             {
-                Doctors = doctors,
-                Patients = patients,
-                Appointments = appointments,
-                DoctorCount = doctors.Count(),
-                PatientCount = patients.Count(),
-                PendingAppointments = appointments.Count(a => a.Status == Status.Pending)
-            };
+                // Get only non-deleted records
+                var doctors = await _doctorRepository.GetAsync(d => !d.IsDeleted);
+                var patients = await _patientRepository.GetAsync(p => !p.IsDeleted);
+                var appointments = await _appointmentRepository.GetAsync(a => !a.IsDeleted);
 
-            return View(dashboardVM);
+                var dashboardVM = new DashboardVM
+                {
+                    Doctors = doctors,
+                    Patients = patients,
+                    Appointments = appointments,
+                    DoctorCount = doctors.Count(),
+                    PatientCount = patients.Count(),
+                    PendingAppointments = appointments.Count(a => a.Status == Status.Pending)
+                };
+
+                return View(dashboardVM);
+            }
+            catch (Exception ex)
+            {
+                TempData["error"] = "An error occurred while loading the dashboard.";
+                return View(new DashboardVM());
+            }
         }
         public ViewResult NotFoundPage()
         {

@@ -46,11 +46,12 @@ namespace Cura520
             app.UseRouting();
 
             // AUTHENTICATION & AUTHORIZATION ENABLED
-            // Redirect root URL to login for unauthenticated users
+            // Middleware for root URL handling
             app.Use(async (context, next) =>
             {
                 if (context.Request.Path == "/" && !context.User.Identity.IsAuthenticated)
                 {
+                    // Unauthenticated users go to login
                     context.Response.Redirect("/Identity/Account/Login");
                     return;
                 }

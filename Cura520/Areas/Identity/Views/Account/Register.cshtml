@@ -1,137 +1,146 @@
-﻿@using Cura520.ViewModel.Identity
-@model RegisterVM
+@using Cura520.ViewModel.Identity
+@model SimpleRegisterVM
 
 @{
     ViewData["Title"] = "Register";
-    
 }
 
 <div class="container-fluid">
     <div class="row min-vh-100 flex-center g-0">
         <div class="col-lg-8 col-xxl-5 py-3 position-relative">
-            <img class="bg-auth-circle-shape" src="~/assetsFalcon/img/icons/spot-illustrations/bg-shape.png" alt="" width="250"><img class="bg-auth-circle-shape-2" src="~/assetsFalcon/img/icons/spot-illustrations/shape-1.png" alt="" width="150">
+            <img class="bg-auth-circle-shape" src="~/assetsFalcon/img/icons/spot-illustrations/bg-shape.png" alt="" width="250">
+            <img class="bg-auth-circle-shape-2" src="~/assetsFalcon/img/icons/spot-illustrations/shape-1.png" alt="" width="150">
             <div class="card overflow-hidden z-index-1">
                 <div class="card-body p-0">
                     <div class="row g-0 h-100">
+                        <!-- Left Side - Marketing -->
                         <div class="col-md-5 text-center bg-card-gradient">
                             <div class="position-relative p-4 pt-md-5 pb-md-7 light">
-                                <div class="bg-holder bg-auth-card-shape" style="background-image:url(@Url.Content("~/assetsFalcon/img/icons/spot-illustrations/half-circle.png"));">
-                                </div>
-                                <!--/.bg-holder-->
+                                <div class="bg-holder bg-auth-card-shape" style="background-image:url(@Url.Content("~/assetsFalcon/img/icons/spot-illustrations/half-circle.png"));"></div>
 
                                 <div class="z-index-1 position-relative">
-                                    <a class="link-light mb-4 font-sans-serif fs-4 d-inline-block fw-bolder" href="@Url.Action("Index", "Home", new { area = "" })">falcon</a>
-                                    <p class="opacity-75 text-white">With the power of Falcon, you can now focus only on functionaries for your digital products, while leaving the UI design on us!</p>
+                                    <a class="link-light mb-4 d-inline-block" href="@Url.Action("Index", "Home", new { area = "" })">
+                                    <h2 class="text-white fw-bolder mb-3">Cura</h2>
+                                    </a>
+                                    <p class="opacity-75 text-white">Start your health journey with Cura. Register now and access premium healthcare services.</p>
                                 </div>
                             </div>
+
                             <div class="mt-3 mb-4 mt-md-4 mb-md-5 light">
-                                <p class="pt-3 text-white">Have an account?<br><a class="btn btn-outline-light mt-2 px-4" asp-action="Login" asp-controller="Account" asp-area="Identity">Log In</a></p>
+                                <p class="pt-3 text-white">Already have an account?<br>
+                                    <a class="btn btn-outline-light mt-2 px-4" asp-action="Login" asp-controller="Account" asp-area="Identity">
+                                        <i class="fas fa-sign-in-alt me-2"></i>Log In
+                                    </a>
+                                </p>
                             </div>
                         </div>
+
+                        <!-- Right Side - Form -->
                         <div class="col-md-7 d-flex flex-center">
                             <div class="p-4 p-md-5 flex-grow-1">
-                                <h3>Register</h3>
-                                <form asp-action="Register" asp-controller="Account" asp-area="Identity" method="post">
+                                <h3 class="mb-2">Create Account</h3>
+                                <p class="text-muted mb-4">Quick registration - additional info can be added later</p>
+
+                                <!-- Validation Summary -->
+                                <div asp-validation-summary="All" class="alert alert-danger alert-dismissible fade show" role="alert" style="display:none;">
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <h6 class="alert-heading mb-2">Please fix the following errors:</h6>
+                                    <ul class="mb-0" style="font-size: 0.9rem;"></ul>
+                                </div>
+
+                                <!-- Registration Form -->
+                                <form asp-action="Register" asp-controller="Account" asp-area="Identity" method="post" novalidate>
+                                    <!-- First Name & Last Name Row -->
                                     <div class="row gx-2">
-                                        <div class="mb-3 col-sm-6">
-                                        <label class="form-label" asp-for="FirstName">First Name</label>
-                                        <input class="form-control" asp-for="FirstName" type="text" autocomplete="on" />
-                                        <span class="text-danger" asp-validation-for="FirstName"></span>
-                                    </div>
-                                        <div class="mb-3 col-sm-6">
-                                        <label class="form-label" asp-for="LastName">Last Name</label>
-                                        <input class="form-control" asp-for="LastName" type="text" autocomplete="on" />
-                                        <span class="text-danger" asp-validation-for="LastName"></span>
-                                    </div>
-                                    </div>
-                                    <div class="row gx-2">
-                                        <div class="mb-3 col-sm-6">
-                                        <label class="form-label" asp-for="Email">Email address</label>
-                                        <input class="form-control" asp-for="Email" type="email" autocomplete="on" />
-                                        <span class="text-danger" asp-validation-for="Email"></span>
-                                    </div>
-                                        <div class="mb-3 col-sm-6">
-                                            <label class="form-label" asp-for="UserName">User Name</label>
-                                            <input class="form-control" asp-for="UserName" type="text" autocomplete="on" />
-                                            <span class="text-danger" asp-validation-for="UserName"></span>
+                                        <div class="col-sm-6 mb-3">
+                                            <label class="form-label" asp-for="FirstName">
+                                                <i class="fas fa-user me-1"></i>First Name <span class="text-danger">*</span>
+                                            </label>
+                                            <input class="form-control" 
+                                                   asp-for="FirstName" 
+                                                   type="text" 
+                                                   placeholder="John"
+                                                   autocomplete="given-name"
+                                                   required />
+                                            <small class="text-danger" asp-validation-for="FirstName"></small>
+                                        </div>
+                                        <div class="col-sm-6 mb-3">
+                                            <label class="form-label" asp-for="LastName">
+                                                <i class="fas fa-user me-1"></i>Last Name <span class="text-danger">*</span>
+                                            </label>
+                                            <input class="form-control" 
+                                                   asp-for="LastName" 
+                                                   type="text" 
+                                                   placeholder="Doe"
+                                                   autocomplete="family-name"
+                                                   required />
+                                            <small class="text-danger" asp-validation-for="LastName"></small>
                                         </div>
                                     </div>
-                                    <div class="row gx-2">
-                                        <div class="mb-3 col-sm-6">
-                                            <label class="form-label" asp-for="Password">Password</label>
-                                            <input class="form-control" asp-for="Password" type="password" autocomplete="on" />
-                                            <span class="text-danger" asp-validation-for="Password"></span>
-                                        </div>
-                                        <div class="mb-3 col-sm-6">
-                                            <label class="form-label" asp-for="ConfirmPassword">Confirm Password</label>
-                                            <input class="form-control" asp-for="ConfirmPassword" type="password" autocomplete="on" />
-                                            <span class="text-danger" asp-validation-for="ConfirmPassword"></span>
-                                        </div>
-                                    </div>
-                                    <div class="row gx-2">
-                                        <div class="mb-3 col-sm-6">
-                                            <label class="form-label" asp-for="DateOfBirth">Date of Birth</label>
-                                            <input class="form-control" asp-for="DateOfBirth" type="date" />
-                                            <span class="text-danger" asp-validation-for="DateOfBirth"></span>
-                                        </div>
-                                        <div class="mb-3 col-sm-6">
-                                            <label class="form-label" asp-for="Gender">Gender</label>
-                                            <select class="form-control" asp-for="Gender">
-                                                <option value="">-- Select Gender --</option>
-                                                <option value="Male">Male</option>
-                                                <option value="Female">Female</option>
-                                                <option value="Other">Other</option>
-                                            </select>
-                                            <span class="text-danger" asp-validation-for="Gender"></span>
-                                        </div>
-                                    </div>
-                                    <div class="row gx-2">
-                                        <div class="mb-3 col-sm-6">
-                                            <label class="form-label" asp-for="PhoneNumber">Phone Number</label>
-                                            <input class="form-control" asp-for="PhoneNumber" type="tel" autocomplete="on" />
-                                            <span class="text-danger" asp-validation-for="PhoneNumber"></span>
-                                        </div>
-                                        <div class="mb-3 col-sm-6">
-                                            <label class="form-label" asp-for="BloodType">Blood Type</label>
-                                            <select class="form-control" asp-for="BloodType">
-                                                <option value="">-- Select Blood Type --</option>
-                                                <option value="O+">O+</option>
-                                                <option value="O-">O-</option>
-                                                <option value="A+">A+</option>
-                                                <option value="A-">A-</option>
-                                                <option value="B+">B+</option>
-                                                <option value="B-">B-</option>
-                                                <option value="AB+">AB+</option>
-                                                <option value="AB-">AB-</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="row gx-2">
-                                        <div class="mb-3 col-sm-6">
-                                            <label class="form-label" asp-for="Address">Address</label>
-                                            <input class="form-control" asp-for="Address" type="text" autocomplete="on" />
-                                        </div>
-                                        <div class="mb-3 col-sm-6">
-                                            <label class="form-label" asp-for="Allergies">Allergies</label>
-                                            <textarea class="form-control" asp-for="Allergies" rows="2"></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="card-register-checkbox" required />
-                                        <label class="form-label" for="card-register-checkbox">I accept the <a href="#!">terms </a>and <a href="#!">privacy policy</a></label>
-                                    </div>
+
+                                    <!-- Email Row -->
                                     <div class="mb-3">
-                                        <button class="btn btn-primary d-block w-100 mt-3" type="submit" name="submit">Register</button>
+                                        <label class="form-label" asp-for="Email">
+                                            <i class="fas fa-envelope me-1"></i>Email Address <span class="text-danger">*</span>
+                                        </label>
+                                        <input class="form-control" 
+                                               asp-for="Email" 
+                                               type="email" 
+                                               placeholder="your@email.com"
+                                               autocomplete="email"
+                                               required />
+                                        <small class="text-danger" asp-validation-for="Email"></small>
                                     </div>
+
+                                    <!-- Password & Confirm Password Row -->
+                                    <div class="row gx-2">
+                                        <div class="col-sm-6 mb-3">
+                                            <label class="form-label" asp-for="Password">
+                                                <i class="fas fa-lock me-1"></i>Password <span class="text-danger">*</span>
+                                            </label>
+                                            <input class="form-control" 
+                                                   asp-for="Password" 
+                                                   type="password" 
+                                                   placeholder="At least 8 characters"
+                                                   autocomplete="new-password"
+                                                   required />
+                                            <small class="text-muted d-block mt-1">Min 8 characters</small>
+                                            <small class="text-danger" asp-validation-for="Password"></small>
+                                        </div>
+                                        <div class="col-sm-6 mb-3">
+                                            <label class="form-label" asp-for="ConfirmPassword">
+                                                <i class="fas fa-lock me-1"></i>Confirm Password <span class="text-danger">*</span>
+                                            </label>
+                                            <input class="form-control" 
+                                                   asp-for="ConfirmPassword" 
+                                                   type="password" 
+                                                   placeholder="Confirm password"
+                                                   autocomplete="new-password"
+                                                   required />
+                                            <small class="text-danger" asp-validation-for="ConfirmPassword"></small>
+                                        </div>
+                                    </div>
+
+                                    <!-- Info Box -->
+                                    <div class="alert alert-info mb-3" role="alert">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <small>Additional information (phone, date of birth, etc.) can be added to your profile after registration.</small>
+                                    </div>
+
+                                    <!-- Submit Button -->
+                                    <div class="mb-3">
+                                        <button class="btn btn-primary d-block w-100 py-2" type="submit">
+                                            <i class="fas fa-user-plus me-2"></i>Create Account
+                                        </button>
+                                    </div>
+
+                                    <!-- Terms -->
+                                    <p class="text-center fs--1 text-muted">
+                                        By registering, you agree to our<br>
+                                        <a href="#" class="text-decoration-none">Terms of Service</a> and 
+                                        <a href="#" class="text-decoration-none">Privacy Policy</a>
+                                    </p>
                                 </form>
-                                <div class="position-relative mt-4">
-                                    <hr />
-                                    <div class="divider-content-center">or register with</div>
-                                </div>
-                                <div class="row g-2 mt-2">
-                                    <div class="col-sm-6"><a class="btn btn-outline-google-plus btn-sm d-block w-100" href="#"><span class="fab fa-google-plus-g me-2" data-fa-transform="grow-8"></span> google</a></div>
-                                    <div class="col-sm-6"><a class="btn btn-outline-facebook btn-sm d-block w-100" href="#"><span class="fab fa-facebook-square me-2" data-fa-transform="grow-8"></span> facebook</a></div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -143,4 +152,17 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Show validation summary if there are errors
+        document.addEventListener('DOMContentLoaded', function () {
+            const validationSummary = document.querySelector('[asp-validation-summary="All"]');
+            if (validationSummary) {
+                const errorsList = validationSummary.querySelector('ul');
+                if (errorsList && errorsList.children.length > 0) {
+                    validationSummary.style.display = 'block';
+                }
+            }
+        });
+    </script>
 }

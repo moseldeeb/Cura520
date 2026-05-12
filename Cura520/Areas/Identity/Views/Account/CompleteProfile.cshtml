@@ -1,0 +1,260 @@
+@using Cura520.ViewModel.Identity
+@model PatientProfileVM
+
+@{
+    ViewData["Title"] = "Complete Your Profile";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body text-center py-4">
+                    <div class="mb-3">
+                        <i class="fas fa-user-circle text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h2 class="card-title mb-2">Welcome, @Model.FirstName!</h2>
+                    <p class="text-muted">Let's complete your profile to get the best healthcare experience</p>
+                </div>
+            </div>
+
+            <!-- Progress Indicator -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted">Profile Completion</span>
+                        <span class="badge bg-primary" id="completionPercentage">0%</span>
+                    </div>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <small class="text-muted d-block mt-2">Fill in your details to improve your healthcare experience</small>
+                </div>
+            </div>
+
+            <!-- Main Form -->
+            <form asp-action="CompleteProfile" asp-controller="Account" asp-area="Identity" method="post" enctype="multipart/form-data" id="profileForm">
+                <!-- Validation Summary -->
+                <div asp-validation-summary="All" class="alert alert-danger alert-dismissible fade show" role="alert" id="validationAlert" style="display:none;">
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <h6 class="alert-heading mb-2"><i class="fas fa-exclamation-circle me-2"></i>Issues Found:</h6>
+                    <ul class="mb-0" style="font-size: 0.9rem;"></ul>
+                </div>
+
+                <!-- Success Message -->
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+                    </div>
+                }
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <!-- Profile Photo -->
+                        <div class="mb-4">
+                            <h5 class="mb-3"><i class="fas fa-image me-2"></i>Profile Photo</h5>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <div class="text-center">
+                                        <div id="photoPreview" style="width: 120px; height: 120px; margin: 0 auto; border-radius: 50%; background: #f0f0f0; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                            @if (!string.IsNullOrEmpty(Model.ProfilePhotoUrl))
+                                            {
+                                                <img src="~/Images/Patients/@Model.ProfilePhotoUrl" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-user-circle text-secondary" style="font-size: 3rem;"></i>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-9">
+                                    <label class="form-label">Upload Photo (Optional)</label>
+                                    <input class="form-control" type="file" asp-for="ProfilePhoto" accept="image/*" id="profilePhotoInput">
+                                    <small class="text-muted d-block mt-2">Supported formats: JPG, PNG, GIF (Max 5MB)</small>
+                                    <small class="text-danger" asp-validation-for="ProfilePhoto"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Personal Information Section -->
+                        <h5 class="mb-3"><i class="fas fa-id-card me-2"></i>Personal Information</h5>
+                        
+                        <div class="row gx-2 mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label">First Name</label>
+                                <input class="form-control" type="text" value="@Model.FirstName" disabled>
+                                <small class="text-muted">From your account</small>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label">Last Name</label>
+                                <input class="form-control" type="text" value="@Model.LastName" disabled>
+                                <small class="text-muted">From your account</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input class="form-control" type="email" value="@Model.Email" disabled>
+                            <small class="text-muted">Verified email</small>
+                        </div>
+
+                        <div class="row gx-2 mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label" asp-for="DateOfBirth">
+                                    <i class="fas fa-birthday-cake me-1"></i>Date of Birth
+                                </label>
+                                <input class="form-control" type="date" asp-for="DateOfBirth" id="dateOfBirth">
+                                <small class="text-danger" asp-validation-for="DateOfBirth"></small>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label" asp-for="Gender">
+                                    <i class="fas fa-venus-mars me-1"></i>Gender
+                                </label>
+                                <select class="form-select" asp-for="Gender" id="gender">
+                                    <option value="">-- Select Gender --</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                <small class="text-danger" asp-validation-for="Gender"></small>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Medical Information Section -->
+                        <h5 class="mb-3"><i class="fas fa-heart-pulse me-2"></i>Medical Information</h5>
+
+                        <div class="row gx-2 mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label" asp-for="PhoneNumber">
+                                    <i class="fas fa-phone me-1"></i>Phone Number
+                                </label>
+                                <input class="form-control" type="tel" asp-for="PhoneNumber" placeholder="+1 234 567 8900">
+                                <small class="text-danger" asp-validation-for="PhoneNumber"></small>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label" asp-for="BloodType">
+                                    <i class="fas fa-droplet me-1"></i>Blood Type
+                                </label>
+                                <select class="form-select" asp-for="BloodType" id="bloodType">
+                                    <option value="">-- Select Blood Type --</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                </select>
+                                <small class="text-danger" asp-validation-for="BloodType"></small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="Allergies">
+                                <i class="fas fa-exclamation-triangle me-1"></i>Allergies
+                            </label>
+                            <textarea class="form-control" asp-for="Allergies" rows="2" placeholder="List any allergies (e.g., Penicillin, Peanuts)"></textarea>
+                            <small class="text-muted">Help us provide better care</small>
+                            <small class="text-danger" asp-validation-for="Allergies"></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="Address">
+                                <i class="fas fa-map-marker-alt me-1"></i>Address
+                            </label>
+                            <textarea class="form-control" asp-for="Address" rows="2" placeholder="Street address, city, state"></textarea>
+                            <small class="text-danger" asp-validation-for="Address"></small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
+                        <i class="fas fa-save me-2"></i>Save Profile & Continue
+                    </button>
+                    <form asp-action="SkipProfileCompletion" asp-controller="Account" asp-area="Identity" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-outline-secondary btn-lg" title="You can complete this later">
+                            <i class="fas fa-arrow-right me-2"></i>Skip for Now
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Info Message -->
+                <div class="alert alert-info mt-3" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <small>Don't worry! You can update your profile anytime from your dashboard. All fields marked optional can be completed later.</small>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Show validation summary if there are errors
+            const validationSummary = document.querySelector('[asp-validation-summary="All"]');
+            if (validationSummary && validationSummary.querySelector('ul li')) {
+                document.getElementById('validationAlert').style.display = 'block';
+            }
+
+            // Profile photo preview
+            const photoInput = document.getElementById('profilePhotoInput');
+            const photoPreview = document.getElementById('photoPreview');
+
+            if (photoInput) {
+                photoInput.addEventListener('change', function (e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function (event) {
+                            photoPreview.innerHTML = `<img src="${event.target.result}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+
+            // Update progress bar
+            function updateProgress() {
+                const fields = [
+                    document.getElementById('dateOfBirth'),
+                    document.getElementById('gender'),
+                    document.getElementById('bloodType'),
+                    photoInput
+                ];
+
+                let completed = 0;
+                fields.forEach(field => {
+                    if (field && field.value) {
+                        completed++;
+                    }
+                });
+
+                const percentage = Math.round((completed / fields.length) * 100);
+                document.getElementById('progressBar').style.width = percentage + '%';
+                document.getElementById('completionPercentage').textContent = percentage + '%';
+            }
+
+            // Update progress on input change
+            document.querySelectorAll('input, select, textarea').forEach(field => {
+                field.addEventListener('change', updateProgress);
+            });
+
+            // Initial progress update
+            updateProgress();
+        });
+    </script>
+}

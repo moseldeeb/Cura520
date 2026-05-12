@@ -3,73 +3,96 @@
 
 @{
     ViewData["Title"] = "Verify OTP";
-    
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-lg">
-                <div class="card-header bg-info text-white">
-                    <h3 class="mb-0">
-                        <i class="fas fa-shield-alt me-2"></i>Verify OTP
-                    </h3>
-                </div>
-                <div class="card-body p-4">
-                    <p class="text-muted mb-4">
-                        Enter the OTP sent to your email address to proceed.
-                    </p>
+<div class="container-fluid">
+    <div class="row min-vh-100 flex-center g-0">
+        <div class="col-lg-8 col-xxl-5 py-3 position-relative">
+            <img class="bg-auth-circle-shape" src="~/assetsFalcon/img/icons/spot-illustrations/bg-shape.png" alt="" width="250">
+            <img class="bg-auth-circle-shape-2" src="~/assetsFalcon/img/icons/spot-illustrations/shape-1.png" alt="" width="150">
+            <div class="card overflow-hidden z-index-1">
+                <div class="card-body p-0">
+                    <div class="row g-0 h-100">
+                        <!-- Left Side - Marketing -->
+                        <div class="col-md-5 text-center bg-card-gradient">
+                            <div class="position-relative p-4 pt-md-5 pb-md-7 light">
+                                <div class="bg-holder bg-auth-card-shape" style="background-image:url(@Url.Content("~/assetsFalcon/img/icons/spot-illustrations/half-circle.png"));"></div>
 
-                    <form asp-action="ValidateOTP" asp-controller="Account" asp-area="Identity" method="post">
-                        <div asp-validation-summary="All" class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            <h6 class="alert-heading">Please fix the following errors:</h6>
+                                <div class="z-index-1 position-relative">
+                                    <a class="link-light mb-4 d-inline-block" href="@Url.Action("Index", "Home", new { area = "" })">
+                                    <h2 class="text-white fw-bolder mb-3">Cura</h2>
+                                    </a>
+                                    <p class="opacity-75 text-white">Verify your identity to access your Cura account securely and manage your healthcare information.</p>
+                                </div>
+                            </div>
+
+                            <div class="mt-3 mb-4 mt-md-4 mb-md-5 light">
+                                <p class="text-white">Need help?<br>
+                                    <a class="text-decoration-underline link-light" asp-action="ForgetPassword" asp-controller="Account" asp-area="Identity">
+                                        Request a new OTP
+                                    </a>
+                                </p>
+                                <p class="mb-0 mt-4 mt-md-5 fs--1 fw-semi-bold text-white opacity-75">
+                                    <a class="text-decoration-underline text-white" asp-action="Login" asp-controller="Account" asp-area="Identity">Back to login</a>
+                                </p>
+                            </div>
                         </div>
 
-                        <div class="form-group mb-3">
-                            <label asp-for="OTP" class="form-label fw-bold">
-                                <i class="fas fa-key me-2"></i>Enter OTP
-                            </label>
-                            <input asp-for="OTP" class="form-control form-control-lg text-center" 
-                                   placeholder="000000" 
-                                   maxlength="6"
-                                   inputmode="numeric"
-                                   style="font-size: 1.5rem; letter-spacing: 0.5rem;" />
-                            <span asp-validation-for="OTP" class="invalid-feedback d-block"></span>
-                            <small class="text-muted d-block mt-2">Enter the 6-digit OTP</small>
+                        <!-- Right Side - Form -->
+                        <div class="col-md-7 d-flex flex-center">
+                            <div class="p-4 p-md-5 flex-grow-1">
+                                <h3 class="mb-2">Verify OTP</h3>
+                                <p class="text-muted mb-4">Enter the 6-digit code sent to your email address</p>
+
+                                <!-- Validation Summary -->
+                                <div asp-validation-summary="All" class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    <h6 class="alert-heading mb-2">Please fix the following errors:</h6>
+                                </div>
+
+                                <!-- OTP Verification Form -->
+                                <form asp-action="ValidateOTP" asp-controller="Account" asp-area="Identity" method="post" novalidate>
+                                    <div class="mb-3">
+                                        <label class="form-label" asp-for="OTP">
+                                            <i class="fas fa-key me-1"></i>One-Time Password <span class="text-danger">*</span>
+                                        </label>
+                                        <input asp-for="OTP" 
+                                               class="form-control form-control-lg text-center" 
+                                               placeholder="000000" 
+                                               maxlength="6"
+                                               inputmode="numeric"
+                                               required
+                                               style="font-size: 1.5rem; letter-spacing: 0.5rem;" />
+                                        <small class="text-danger" asp-validation-for="OTP"></small>
+                                        <small class="text-muted d-block mt-1">Enter the 6-digit OTP</small>
+                                    </div>
+
+                                    <!-- Hidden input for ApplicationUserId -->
+                                    <input asp-for="ApplicationUserId" class="d-none" />
+
+                                    <!-- OTP Info Box -->
+                                    <div class="alert alert-info mb-3" role="alert">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <small>
+                                            <strong>OTP expires in 10 minutes.</strong> Check your spam folder if you didn't receive it. Each code can only be used once.
+                                        </small>
+                                    </div>
+
+                                    <!-- Submit Button -->
+                                    <div class="mb-3">
+                                        <button class="btn btn-primary d-block w-100 py-2" type="submit">
+                                            <i class="fas fa-check me-2"></i>Verify OTP
+                                        </button>
+                                    </div>
+
+                                    <!-- Alternative Actions -->
+                                    <p class="text-center fs--1 text-muted">
+                                        Didn't receive the OTP?<br>
+                                        <a asp-action="ForgetPassword" asp-controller="Account" asp-area="Identity" class="text-decoration-none">Request a new code</a>
+                                    </p>
+                                </form>
+                            </div>
                         </div>
-
-                        <!-- Hidden input for ApplicationUserId -->
-                        <input asp-for="ApplicationUserId" class="d-none" />
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-info btn-lg fw-bold text-white">
-                                <i class="fas fa-check me-2"></i>Verify OTP
-                            </button>
-                        </div>
-                    </form>
-
-                    <hr class="my-4" />
-
-                    <div class="alert alert-warning">
-                        <h6 class="alert-heading">
-                            <i class="fas fa-info-circle me-2"></i>Important
-                        </h6>
-                        <ul class="mb-0 small">
-                            <li>OTP is valid for 10 minutes only</li>
-                            <li>Check your email's spam folder if you didn't receive it</li>
-                            <li>Each OTP can only be used once</li>
-                        </ul>
-                    </div>
-
-                    <div class="text-center">
-                        <p class="mb-0 small text-muted">
-                            Didn't receive OTP?
-                            <a asp-action="ForgetPassword" asp-controller="Account" asp-area="Identity" 
-                               class="btn btn-link btn-sm p-0">
-                                Request New OTP
-                            </a>
-                        </p>
                     </div>
                 </div>
             </div>

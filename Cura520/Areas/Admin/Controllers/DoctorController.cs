@@ -1,8 +1,10 @@
 ﻿using Cura520.Models;
 using Cura520.Repos;
+using Cura520.Utilities;
 using Cura520.ViewModel;
 using Cura520.ViewModel.Admin.Doctor;
 using Mapster;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Cura520.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    // [Authorize(Roles = $"{SD.Role_SuperAdmin},{SD.Role_Admin},{SD.Role_Manager}")]
+    [Authorize(Roles = $"{SD.Role_SuperAdmin},{SD.Role_Admin}")]
     public class DoctorController(
         UserManager<ApplicationUser> userManager,
         IRepository<Models.Doctor> doctorRepository,
@@ -53,6 +55,7 @@ namespace Cura520.Areas.Admin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateDoctorVM doctorVM)
         {
             if (!ModelState.IsValid)
@@ -60,67 +63,107 @@ namespace Cura520.Areas.Admin.Controllers
                 return View(doctorVM);
             }
 
-            var Doctor = doctorVM.Adapt<Doctor>();
-
-            if (doctorVM.ImageFile != null && doctorVM.ImageFile.Length > 0)
+            try
             {
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(doctorVM.ImageFile.FileName);
-                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images", "Doctors", fileName);
-
-                var directory = Path.GetDirectoryName(filePath);
-                if (!Directory.Exists(directory)) Directory.CreateDirectory(directory!);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                // Validate that doctor schedules exist
+                if (doctorVM.DoctorSchedules == null || !doctorVM.DoctorSchedules.Any())
                 {
-                    await doctorVM.ImageFile.CopyToAsync(stream);
+                    ModelState.AddModelError("", "At least one schedule is required.");
+                    return View(doctorVM);
                 }
-                Doctor.Img = fileName;
+
+                var Doctor = doctorVM.Adapt<Doctor>();
+                
+                // Null check for mapped doctor
+                if (Doctor == null)
+                {
+                    ModelState.AddModelError("", "Error mapping doctor data. Please try again.");
+                    return View(doctorVM);
+                }
+
+                // Handle image file
+                if (doctorVM.ImageFile != null && doctorVM.ImageFile.Length > 0)
+                {
+                    try
+                    {
+                        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(doctorVM.ImageFile.FileName);
+                        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images", "Doctors", fileName);
+
+                        var directory = Path.GetDirectoryName(filePath);
+                        if (!Directory.Exists(directory)) Directory.CreateDirectory(directory!);
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await doctorVM.ImageFile.CopyToAsync(stream);
+                        }
+                        Doctor.Img = fileName;
+                    }
+                    catch (Exception ex)
+                    {
+                        ModelState.AddModelError("", "Error uploading image file. Please try again.");
+                        return View(doctorVM);
+                    }
+                }
+
+                var user = doctorVM.Adapt<ApplicationUser>();
+                
+                if (user == null)
+                {
+                    ModelState.AddModelError("", "Error creating user account. Please try again.");
+                    return View(doctorVM);
+                }
+
+                user.UserName = doctorVM.Email;
+                user.Type = UserType.Doctor;
+                user.EmailConfirmed = true;
+                user.PhoneNumberConfirmed = true;
+
+                var result = await _userManager.CreateAsync(user, doctorVM.Password);
+
+                if (result.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(user, "Doctor");
+                    Doctor.ApplicationUserId = user.Id;
+
+                    // Map schedules with null safety
+                    Doctor.DoctorSchedules = [.. doctorVM.DoctorSchedules
+                        .Where(s => s != null)
+                        .Select(s => new DoctorSchedule
+                        {
+                            Day = s.Day,
+                            StartTime = s.StartTime,
+                            EndTime = s.EndTime,
+                            Doctor = Doctor
+                        })];
+
+                    try
+                    {
+                        await _doctorRepository.AddAsync(Doctor);
+                        await _doctorRepository.CommitAsync();
+
+                        TempData["success"] = "Doctor created successfully.";
+                        return RedirectToAction(nameof(Home));
+                    }
+                    catch (Exception ex)
+                    {
+                        // Rollback: delete the created user
+                        await _userManager.DeleteAsync(user);
+                        ModelState.AddModelError("", "An error occurred while saving the doctor profile. Please try again.");
+                    }
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError("", error.Description);
+                }
+
+                return View(doctorVM);
             }
-
-            var user = doctorVM.Adapt<ApplicationUser>();
-
-            user.UserName = doctorVM.Email;
-            user.Type = UserType.Doctor;
-            user.EmailConfirmed = true;
-            user.PhoneNumberConfirmed = true;
-
-
-            var result = await _userManager.CreateAsync(user, doctorVM.Password);
-
-
-            if (result.Succeeded)
+            catch (Exception ex)
             {
-                await _userManager.AddToRoleAsync(user, "Doctor");
-                Doctor.ApplicationUserId = user.Id;
-
-
-                Doctor.DoctorSchedules = [.. doctorVM.DoctorSchedules.Select(s => new DoctorSchedule
-                {
-                    Day = s.Day,
-                    StartTime = s.StartTime,
-                    EndTime = s.EndTime,
-                    Doctor = Doctor
-                })];
-                try
-                {
-                    await _doctorRepository.AddAsync(Doctor);
-                    await _doctorRepository.CommitAsync();
-
-                    return RedirectToAction(nameof(Home));
-                }
-                catch (Exception)
-                {
-                    await _userManager.DeleteAsync(user);
-                    ModelState.AddModelError("", "An error occurred while saving the doctor profile. Please try again.");
-                }
+                ModelState.AddModelError("", "An unexpected error occurred. Please try again.");
+                return View(doctorVM);
             }
-
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError("", error.Description);
-            }
-
-            return View(doctorVM);
         }
 
         [HttpGet]
@@ -207,37 +250,73 @@ namespace Cura520.Areas.Admin.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            var doctorInDb = await _doctorRepository.GetOneAsync(c => c.Id == id);
-            if (doctorInDb is null) return NotFound();
-
-            var doctorUser = await _userManager.FindByIdAsync(doctorInDb.ApplicationUserId);
-            if (doctorUser is null)
-            return NotFound();
-
-            var schedules = await _doctorScheduleRepository.GetAsync(s => s.DoctorId == doctorInDb.Id);
-            if (schedules != null && schedules.Any())
+            try
             {
-                foreach (var schedule in schedules)
+                var doctorInDb = await _doctorRepository.GetOneAsync(c => c.Id == id);
+                if (doctorInDb is null)
                 {
-                    _doctorScheduleRepository.Delete(schedule);
+                    TempData["error"] = "Doctor not found.";
+                    return RedirectToAction(nameof(Home));
                 }
-                await _doctorScheduleRepository.CommitAsync();
-            }
 
-            if (!string.IsNullOrEmpty(doctorInDb.Img))
+                var doctorUser = await _userManager.FindByIdAsync(doctorInDb.ApplicationUserId);
+                if (doctorUser is null)
+                {
+                    TempData["error"] = "Associated user account not found.";
+                    return RedirectToAction(nameof(Home));
+                }
+
+                // Delete schedules
+                var schedules = await _doctorScheduleRepository.GetAsync(s => s.DoctorId == doctorInDb.Id);
+                if (schedules != null && schedules.Any())
+                {
+                    foreach (var schedule in schedules)
+                    {
+                        _doctorScheduleRepository.Delete(schedule);
+                    }
+                    await _doctorScheduleRepository.CommitAsync();
+                }
+
+                // Delete image file with error handling
+                if (!string.IsNullOrEmpty(doctorInDb.Img))
+                {
+                    try
+                    {
+                        var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Images/Doctors", doctorInDb.Img);
+                        if (System.IO.File.Exists(path))
+                        {
+                            System.IO.File.Delete(path);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log error but continue with deletion
+                    }
+                }
+
+                // Delete doctor record
+                _doctorRepository.Delete(doctorInDb);
+                await _doctorRepository.CommitAsync();
+
+                // Delete user account
+                var userDeleteResult = await _userManager.DeleteAsync(doctorUser);
+                if (!userDeleteResult.Succeeded)
+                {
+                    TempData["warning"] = "Doctor deleted but user account could not be deleted.";
+                    return RedirectToAction(nameof(Home));
+                }
+
+                TempData["success"] = "Doctor deleted successfully.";
+                return RedirectToAction(nameof(Home));
+            }
+            catch (Exception ex)
             {
-                var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Images/Doctors", doctorInDb.Img);
-                if (System.IO.File.Exists(path)) System.IO.File.Delete(path);
+                TempData["error"] = "An error occurred while deleting the doctor. Please try again.";
+                return RedirectToAction(nameof(Home));
             }
-
-            _doctorRepository.Delete(doctorInDb);
-            await _userManager.DeleteAsync(doctorUser);
-            await _doctorRepository.CommitAsync();
-
-
-            return RedirectToAction(nameof(Home));
         }
 
         [HttpPost]

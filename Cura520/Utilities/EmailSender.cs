@@ -3,26 +3,29 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using System.Net;
 using System.Net.Mail;
 
-public class EmailSender : IEmailSender
+namespace Cura520.Utilities
 {
-    public Task SendEmailAsync(string email, string subject, string htmlMessage)
+    public class EmailSender : IEmailSender
     {
-        var client = new SmtpClient("smtp.gmail.com", 587)
+        public Task SendEmailAsync(string email, string subject, string htmlMessage)
         {
-            EnableSsl = true,
-            UseDefaultCredentials = false,
-            Credentials = new NetworkCredential("Curamvc@gmail.com", "nfxl rbcy ithe gvrk")
-        };
+            var client = new SmtpClient("smtp.gmail.com", 587)
+            {
+                EnableSsl = true,
+                UseDefaultCredentials = false,
+                Credentials = new NetworkCredential("curamvc@gmail.com", "ugxk ejbt iosu jwns")
+            };
 
-        var mailMessage = new MailMessage
-        {
-            From = new MailAddress("Curamvc@gmail.com", "Cura Clinic Management"), 
-            Subject = subject,
-            Body = htmlMessage,
-            IsBodyHtml = true
-        };
-        mailMessage.To.Add(email);
+            return client.SendMailAsync(
+                new MailMessage(from: "curamvc@gmail.com",
+                                to: email,
+                                subject,
+                                htmlMessage
+                                )
+                {
+                    IsBodyHtml = true
+                });
+        }
 
-        return client.SendMailAsync(mailMessage);
     }
 }

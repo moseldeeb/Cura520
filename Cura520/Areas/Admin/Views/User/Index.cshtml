@@ -1,97 +1,84 @@
 ﻿@model IEnumerable<ApplicationUser>
 
+@{
+    ViewData["Title"] = "Users Management";
+}
 
 <div class="container">
     <div class="row mb-3 align-items-center my-3">
         <div class="col-md-6">
-            <h2 class="display-6">All Categories</h2>
-        </div>
-        <div class="col-md-6 text-md-end text-start mt-2 mt-md-0">
-            <a href="/Admin/Category/Create" class="btn btn-success">Create</a>
+            <h2 class="display-6">All Users</h2>
         </div>
     </div>
 
     <div class="row">
         <div class="col-12">
-
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Full Name</th>
-                        <th scope="col">User Name</th>
-                        <th scope="col">Email</th>
-                        <th scope="col">Lock UnLock</th>
-                    </tr>
-                </thead>
-                <tbody>
-
-                    @foreach (var item in Model)
-                    {
+            @if (Model != null && Model.Any())
+            {
+                <table class="table table-hover">
+                    <thead>
                         <tr>
-                            <th scope="row">@item.Id</th>
-                            <th scope="row">@item.FirstName  @item.LastName</th>
-                            <th scope="row">@item.UserName</th>
-                            <td scope="row">@item.Email</td>
-                            <td>
-                                @if (item.LockoutEnd != null && item.LockoutEnd > DateTime.UtcNow)
-                                {
-                                    <a href="/Admin/User/LockUnLock/@item.Id" type="button" class="btn btn-success">Unlock</a>
-                                }
-                                else
-                                {
-                                    <a href="/Admin/User/LockUnLock/@item.Id" type="button" class="btn btn-danger">Lock</a>
-                                }
-
-                            </td>
+                            <th scope="col">#</th>
+                            <th scope="col">Full Name</th>
+                            <th scope="col">User Name</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Actions</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <th scope="row">@item.Id</th>
+                                <td>@item.FirstName @item.LastName</td>
+                                <td>@item.UserName</td>
+                                <td>@item.Email</td>
+                                <td>
+                                    @if (item.LockoutEnd != null && item.LockoutEnd > DateTime.UtcNow)
+                                    {
+                                        <span class="badge bg-danger">Locked</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.LockoutEnd != null && item.LockoutEnd > DateTime.UtcNow)
+                                    {
+                                        <form method="post" asp-action="LockUnLock" asp-route-id="@item.Id" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Are you sure you want to unlock this user?');">Unlock</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form method="post" asp-action="LockUnLock" asp-route-id="@item.Id" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to lock this user?');">Lock</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    No users found.
+                </div>
+            }
         </div>
     </div>
 </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const deleteButtons = document.querySelectorAll(".btn-delete");
-
-        deleteButtons.forEach(button => {
-            button.addEventListener("click", function (e) {
-                e.preventDefault(); // stop normal navigation
-
-                const url = this.getAttribute("href");
-
-                Swal.fire({
-                    title: "Are you sure?",
-                    text: "this Category will be deleted !",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#d33",
-                    cancelButtonColor: "#3085d6",
-                    confirmButtonText: "Yes, delete it!"
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        Swal.fire({
-                          title: "Deleted!",
-                          text: "Your file has been deleted.",
-                          icon: "success"
-                        });
-
-                        // Redirect to delete URL
-                        window.location.href = url;
-                    }
-                });
-            });
-        });
-    });
-</script>
-
-
 @section Scripts {
-
     <partial name="_NotificationPartial" />
 }
+
 
 
 

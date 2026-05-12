@@ -1,14 +1,16 @@
 ﻿using Cura520.Models;
 using Cura520.Repos;
+using Cura520.Utilities;
 using Cura520.ViewModel.Admin.Receptionist;
 using Mapster;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Cura520.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    // [Authorize(Roles = $"{SD.Role_SuperAdmin},{SD.Role_Admin},{SD.Role_Manager}")]
+    [Authorize(Roles = $"{SD.Role_SuperAdmin},{SD.Role_Admin}")]
     public class ReceptionistController(
         UserManager<ApplicationUser> userManager,
         IRepository<Receptionist> receptionistRepository) : Controller
@@ -43,56 +45,67 @@ namespace Cura520.Areas.Admin.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(CreateReceptionistVM  receptionistVM)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(CreateReceptionistVM receptionistVM)
         {
-            //if (!ModelState.IsValid) return View(model);
-
-
-            var Receptionist = receptionistVM.Adapt<Receptionist>();
-
-
-            if (receptionistVM.ImageFile != null && receptionistVM.ImageFile.Length > 0)
+            // Validate model state
+            if (!ModelState.IsValid)
             {
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(receptionistVM.ImageFile.FileName);
-                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Images/Receptionists", fileName);
+                return View(receptionistVM);
+            }
 
-                var directory = Path.GetDirectoryName(filePath);
-                if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
+            try
+            {
+                var Receptionist = receptionistVM.Adapt<Receptionist>();
 
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                if (receptionistVM.ImageFile != null && receptionistVM.ImageFile.Length > 0)
                 {
-                    await receptionistVM.ImageFile.CopyToAsync(stream);
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(receptionistVM.ImageFile.FileName);
+                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Images/Receptionists", fileName);
+
+                    var directory = Path.GetDirectoryName(filePath);
+                    if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await receptionistVM.ImageFile.CopyToAsync(stream);
+                    }
+                    Receptionist.Img = fileName;
                 }
-                receptionistVM.Img = fileName;
+
+                var user = receptionistVM.Adapt<ApplicationUser>();
+
+                user.UserName = receptionistVM.Email;
+                user.Type = UserType.Receptionist;
+                user.EmailConfirmed = true;
+                user.PhoneNumberConfirmed = true;
+
+                var result = await _userManager.CreateAsync(user, receptionistVM.Password);
+
+                if (result.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(user, "Receptionist");
+                    Receptionist.ApplicationUserId = user.Id;
+
+                    await _receptionistRepository.AddAsync(Receptionist);
+                    await _receptionistRepository.CommitAsync();
+
+                    TempData["success"] = "Receptionist created successfully.";
+                    return RedirectToAction(nameof(Home));
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError("", error.Description);
+                }
+
+                return View(receptionistVM);
             }
-
-            var user = receptionistVM.Adapt<ApplicationUser>();
-
-            user.UserName = receptionistVM.Email;
-            user.Type = UserType.Receptionist;
-            user.EmailConfirmed = true;
-            user.PhoneNumberConfirmed = true;
-
-            var result = await _userManager.CreateAsync(user, receptionistVM.Password);
-
-
-            if (result.Succeeded)
+            catch (Exception ex)
             {
-                await _userManager.AddToRoleAsync(user, "Receptionist");
-                Receptionist.ApplicationUserId = user.Id;
-
-                await _receptionistRepository.AddAsync(Receptionist);
-                await _receptionistRepository.CommitAsync();
-
-                return RedirectToAction(nameof(Home));
+                ModelState.AddModelError("", "An error occurred while creating the receptionist. Please try again.");
+                return View(receptionistVM);
             }
-
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError("", error.Description);
-            }
-
-            return View(receptionistVM);
         }
 
         [HttpGet]
