@@ -210,9 +210,23 @@ namespace Cura520.Areas.Identity.Controllers
             }
             else if (await _userManager.IsInRoleAsync(user, SD.Role_Patient))
             {
-                // For patients, check if profile is complete
-                // First-time patients go to profile completion page
-                return RedirectToAction("CompleteProfile", "Account", new { area = "Identity" });
+                var patient = await _userManager.FindByIdAsync(user.Id); // you already have user
+
+                // Check if profile is complete
+                var patientProfile = await _patientRepository.GetOneAsync(
+                    p => p.ApplicationUserId == user.Id && !p.IsDeleted
+                );
+
+                if (patientProfile == null ||
+                    string.IsNullOrEmpty(patientProfile.PhoneNumber) ||
+                    patientProfile.DateOfBirth == DateTime.MinValue)
+                {
+                    // First time or incomplete profile
+                    return RedirectToAction("CompleteProfile", "Account", new { area = "Identity" });
+                }
+
+                // Profile is complete, go to home
+                return RedirectToAction("Index", "Home", new { area = "Patient" });
             }
             else if (await _userManager.IsInRoleAsync(user, SD.Role_Receptionist))
             {

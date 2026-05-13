@@ -79,7 +79,6 @@
                                 <div class="card bg-light">
                                     <div class="card-body">
                                         <h6>Doctor Details</h6>
-                                        <input type="hidden" asp-for="DoctorId">
                                         <input type="hidden" asp-for="DoctorName">
                                         <input type="hidden" asp-for="DoctorSpecialty">
                                         <input type="hidden" asp-for="ConsultationFee">
@@ -161,6 +160,11 @@
                                 document.getElementById('doctorSpecialty').textContent = doctor.specialty;
                                 document.getElementById('consultationFee').textContent = doctor.consultationFee.toFixed(2);
                                 doctorInfo.style.display = 'block';
+
+                                document.querySelector('input[name="DoctorName"]').value = doctor.name;
+                                document.querySelector('input[name="DoctorSpecialty"]').value = doctor.specialty;
+                                document.querySelector('input[name="ConsultationFee"]').value = doctor.consultationFee;
+
                             }
                         });
                 } else {
